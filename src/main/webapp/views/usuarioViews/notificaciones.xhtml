@@ -1,0 +1,213 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:a="http://xmlns.jcp.org/jsf/passthrough">
+
+    <body onload="toggle()">
+
+        <ui:composition template="./../templates/colossalBaseTemplate.xhtml">
+
+            <ui:define name="titulo_template">
+                COlOsSAL UFPS - BIBLIOTECA DE COMPONENTES
+            </ui:define>
+
+            <ui:define name="header_menu_template">
+                <h:form>
+                    #{notificacionBean.inicializarBean()}
+                    <p:commandLink id="cerrar_sesion" actionListener="#{logBean.cerrarSesion(componentBean)}" styleClass="link-ajuste header_menu " style="float: right">
+                        <p><span class="glyphicon glyphicon-log-out  icon-ajuste"></span></p> 
+                    </p:commandLink>
+                    <p:tooltip id="tooTipCerrarSession" for="cerrar_sesion" value="Cerrar Sesión" position="left"/>
+                    <p:commandLink action="#{componentBean.openAdminPanel()}" rendered="#{usuarioBean.esAdministrador()}" styleClass="link-ajuste header_menu " style="float: right" id="panel_admin" ><p><span class="glyphicon glyphicon-pencil  icon-ajuste"></span></p></p:commandLink>
+                    <p:tooltip id="toolTipadmin" for="panel_admin" value="Panel de Administración" position="left"/>
+                    <p:commandLink action="#{busquedaBean.openUserPanel(5,0,1,1,1)}" id="panel_perfil" styleClass="link-ajuste header_menu" style="float: right"><p><span class="glyphicon glyphicon-user icon-ajuste"></span></p></p:commandLink>
+                    <p:tooltip id="toolTipperfil" for="panel_perfil" value="Mi Perfil" position="left"/>
+                    <p:commandLink action="#{componentBean.abrirUploadComponent()}"  id="panel_subir" styleClass="link-ajuste header_menu" style="float: right"><p><span class="glyphicon glyphicon-open  icon-ajuste"></span></p></p:commandLink>                  
+                    <p:tooltip id="toolTipsubir" for="panel_subir" value="Subir Componentes"  position="left"/>
+                    <div class="dropdown" style="float: right;">
+                        <a style="cursor: pointer;text-decoration: none" class="link-ajuste header_menu dropdown-toggle" data-toggle="dropdown">
+                            <span class="glyphicon glyphicon-bell icon-ajuste"/>
+                            <span class="badge">#{notificacionBean.contarNotificacionesNuevas()}</span>
+                        </a>
+                        <ul class="dropdown-menu " >
+                            <table class="table">
+                                <ui:repeat value="#{notificacionBean.encontrarNotificacionesNuevas()}"  var="notificacion">
+                                    <tr>
+                                        <td class=" hover-table">
+                                            <p:commandLink action="#{notificacionBean.verNotificacion(notificacion)}">
+                                                <strong>#{administradorBean.prepararFechaYHora(notificacion.estadoIdestado.fechaGeneracion)}</strong><br/>
+                                                #{notificacionBean.limitarTexto(notificacion)}
+                                            </p:commandLink>
+                                        </td>
+                                    </tr>
+                                </ui:repeat>
+                            </table>
+                            <p:outputPanel rendered="#{notificacionBean.contarNotificacionesNuevas()==0}">
+                                <table class="table">
+                                    <tr>
+                                        <td class="text-center">No hay notificaciones nuevas.</td>
+                                    </tr>
+                                </table>
+                            </p:outputPanel>
+                            <hr class="margin-reduction"/>
+                            <center>
+                                <p:commandLink  styleClass="margin-reduction" action="#{notificacionBean.verNotificaciones(1,1)}" value="Ver todas"/>
+                            </center>
+                        </ul>
+                    </div>
+                </h:form>
+            </ui:define>
+
+            <ui:define name="menu_sidebar_template">
+                <h:form onsubmit="return false;">
+                    <li class="sidebar-brand">
+                        <p:commandLink action="#{componentBean.abrirInicio()}" style="margin: 0 auto"><span class="glyphicon glyphicon-home"></span>&nbsp;&nbsp;Menú de Inicio</p:commandLink>
+                    </li>
+                    <h:inputText  a:placeholder="Buscar Categorías" styleClass="form-control" style="width: 80%;margin: 0 auto;font-size: 13px" value="#{categoriaBean.categoria}">
+                        <p:ajax event="keyup" update="categoriaList" listener="#{categoriaBean.findCategoriesByName()}" />
+                    </h:inputText>
+                    <br/>
+                    <p:outputPanel id="categoriaList">
+                        <c:forEach var="categoria" items="#{categoriaBean.categorias}">
+                            <li>
+                                <p:commandLink action="#{busquedaBean.buscar(1,1,1,0)}">#{categoria.nombre}
+                                    <f:setPropertyActionListener value="#{categoria.idcategoria}"  target="#{busquedaBean.id_cat}" />
+                                </p:commandLink>
+                            </li>
+                        </c:forEach>
+                    </p:outputPanel>
+                </h:form>
+            </ui:define>
+
+            <ui:define name="contenido_template">
+                <h:form>
+                    
+                    <h3 class="text-center title">Notificaciones</h3>
+                    <br/>
+                    <p:outputPanel rendered="#{notificacionBean.ident==1}">
+                        <p:outputPanel rendered="#{notificacionBean.notificacion!=null}">
+                            <div class="panel panel-success">
+                                <div class="panel-heading">
+                                    <p:outputPanel rendered="#{notificacionBean.notificacion.componenteidComponente!=null}">
+                                        Componente relacionado: 
+                                        <p:commandLink action="#{busquedaBean.verComponente(notificacionBean.notificacion.componenteidComponente.idComponente)}">#{notificacionBean.notificacion.componenteidComponente.nombre}</p:commandLink>
+                                    </p:outputPanel>
+                                </div>
+                                <div class="panel-body">
+                                    <table class="table text-center">
+                                        <tr>
+                                            <td class="text-justify" >Fecha de Notificación: #{administradorBean.prepararFechaYHora(notificacionBean.notificacion.estadoIdestado.fechaGeneracion)}</td>
+                                            <td class="text-justify">Fecha de Revisión: #{administradorBean.prepararFechaYHora(notificacionBean.notificacion.estadoIdestado.fechaRevision)}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2" class="text-justify">Asunto:&nbsp;#{notificacionBean.notificacion.asunto}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2" class="text-justify">
+                                                Mensaje:<br/><br/>
+                                                #{notificacionBean.notificacion.mensaje}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </p:outputPanel>
+                    </p:outputPanel>
+                    <p:outputPanel rendered="#{notificacionBean.ident==2}">
+
+                        <p:outputPanel rendered="#{notificacionBean.cantidadNotificaciones>0}">
+                            <div class="row" >
+                                <div class="col-md-9">
+
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="col-md-6 text-center" style="background-color: #dff0d8">Pendiente</div>
+                                    <div class="col-md-6 text-center" style="background-color: #f5f5f5">Revisada</div>
+
+                                </div>
+                            </div>
+                        </p:outputPanel>
+                        <br/>
+                        <ui:repeat value="#{notificacionBean.lNotificaciones}" var="notificacion">
+
+                            <div class="panel panel-#{notificacionBean.getClass(notificacion)}">
+                                <div class="panel-heading">
+                                    <p:outputPanel rendered="#{notificacion.componenteidComponente!=null}">
+                                        <div class="row">
+                                            <div class="col-md-12 text-justify">
+
+                                                <p:outputPanel rendered="#{usuarioBean.esAdministrador()==false}">
+                                                    #{n.getComponenteidComponente().getPeticionSubidaList().get(0).getEstadoIdestado().getEstado()}
+                                                    <p:outputPanel rendered="#{notificacionBean.validarEstadoComponente(notificacion)}">
+                                                        Componente eliminado: #{notificacion.componenteidComponente.nombre}
+                                                    </p:outputPanel>
+                                                    <p:outputPanel rendered="#{not notificacionBean.validarEstadoComponente(notificacion)}">
+                                                        Componente relacionado: 
+                                                        <p:commandLink action="#{busquedaBean.verComponente(notificacion.componenteidComponente.idComponente)}">
+                                                            #{notificacion.componenteidComponente.nombre}
+                                                        </p:commandLink>
+                                                    </p:outputPanel>
+                                                </p:outputPanel>
+                                                <p:outputPanel rendered="#{usuarioBean.esAdministrador()}">
+                                                    Componente relacionado: 
+                                                    <p:commandLink action="#{busquedaBean.verComponente(notificacion.componenteidComponente.idComponente)}">
+                                                        #{notificacion.componenteidComponente.nombre}
+                                                    </p:commandLink>
+                                                </p:outputPanel>
+                                            </div>
+                                        </div>
+                                    </p:outputPanel>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="row">
+                                        <div class="col-md-6">Fecha de Notificación: #{administradorBean.prepararFechaYHora(notificacion.estadoIdestado.fechaGeneracion)}</div>
+                                        <div class="col-md-6">Fecha de Revisión: #{administradorBean.prepararFechaYHora(notificacion.estadoIdestado.fechaRevision)}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            Asunto:&nbsp;#{notificacion.asunto}
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            Mensaje:<br/>
+                                            #{notificacion.mensaje}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </ui:repeat>
+                        <p:outputPanel rendered="#{notificacionBean.calcularPaginasTotales()>1}" styleClass="text-center">
+                            <ul class="pagination">
+                                <li><p:commandLink action="#{notificacionBean.busqueda(1,-1)}"><span class="glyphicon glyphicon-menu-left"></span><span class="glyphicon glyphicon-menu-left"></span></p:commandLink></li>
+                                <li><p:commandLink action="#{notificacionBean.busqueda(2,-1)}"><span class="glyphicon glyphicon-menu-left"></span></p:commandLink></li>
+                                <c:forEach var="numero" items="#{notificacionBean.calcularPaginas()}">
+                                    <c:if test="#{notificacionBean.pagina == numero}">
+                                        <li class="active"><p:commandLink >#{numero}</p:commandLink></li>  
+                                    </c:if>
+                                    <c:if test="#{notificacionBean.pagina != numero}">
+                                        <li><p:commandLink action="#{notificacionBean.busqueda(-1,numero)}">#{numero}</p:commandLink></li>  
+                                    </c:if>
+                                </c:forEach>
+                                <li><p:commandLink action="#{notificacionBean.busqueda(3,-1)}"><span class="glyphicon glyphicon-menu-right"></span></p:commandLink></li>
+                                <li><p:commandLink action="#{notificacionBean.busqueda(4,-1)}"><span class="glyphicon glyphicon-menu-right"></span><span class="glyphicon glyphicon-menu-right"></span></p:commandLink></li>
+                            </ul>
+                        </p:outputPanel>
+
+
+                        <p:outputPanel rendered="#{notificacionBean.cantidadNotificaciones==0}">
+                            <center><h4>No tienes nuevas notificaciones.</h4></center>
+                        </p:outputPanel>
+                    </p:outputPanel>
+                </h:form>
+            </ui:define>
+
+        </ui:composition>
+
+    </body>
+</html>

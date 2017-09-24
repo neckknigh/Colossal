@@ -1,0 +1,135 @@
+<?xml version='1.0' encoding='UTF-8' ?> 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:jsf="http://xmlns.jcp.org/jsf"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+
+    <h:head>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+        <meta name="viewport" content="width=device-width, shrink-to-fit=no, initial-scale=1"/>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <h:outputStylesheet library="css" name="bootstrap.css"/>
+        <h:outputStylesheet library="css" name="bootstrap.min.css"/>
+        <h:outputStylesheet library="css" name="estilo-general.css"/>
+        <h:outputStylesheet library="css" name="prettify.css"/>
+        <h:outputScript library="js" name="bootstrap.min.js"/>
+        <h:outputScript library="js" name="funciones.js"/>
+        <h:outputScript library="js" name="prettify.js"/>
+        <title><ui:insert name="titulo_template">COlOsSAL UFPS</ui:insert></title>
+    </h:head>
+
+    <h:body onload="toggle(), tooltip()">
+                <header class="head-conf">
+                    <table style="width: 100%;min-width: 361px" >
+                        <tr>
+                            <td id="td-header1" >
+                                <a href="#menu-toggle" style="float: left"  id="menu-toggle"><p><span class="glyphicon glyphicon-align-justify text-left icon-ajuste"></span></p></a>
+                            </td>
+                            <td style="text-align: right;vertical-align: top" id="td-header2" colspan="2">
+                                <label class="etiqueta  title" id="header_display"  >COlOsSAL UFPS - BIBLIOTECA DE COMPONENTES</label>
+                                <label class="etiqueta  title" id="header_display2" >COlOsSAL UFPS</label>
+                                <label class="etiqueta  title" id="header_display3" >C-UFPS</label>
+                            </td>
+                            <td id="td-header3" >
+                                <ui:insert name="header_menu_template">
+                                    <a href="#" class="link-ajuste header_menu"  title="Mi Seccion" ><p><span class="glyphicon glyphicon-user  icon-ajuste"></span></p></a>
+                                    <a href="#" class="link-ajuste header_menu"  title="Mis listas de componentes" ><p><span class="glyphicon glyphicon-list  icon-ajuste"></span></p></a>
+                                    <a href="#" class="link-ajuste header_menu"  title="Busqueda en la biblioteca" ><p><span class="glyphicon glyphicon-search icon-ajuste"></span></p></a>
+                                </ui:insert>
+                            </td>
+                        </tr>
+                    </table>
+                </header>
+        <div id="wrapper">
+
+            <!-- Sidebar -->
+            <div id="sidebar-wrapper">
+                <ul class="sidebar-nav">
+                    <ui:insert name="menu_sidebar_template">
+                        <li class="sidebar-brand">
+                            <a href="#">
+                                <p>Menu de inicio<span class="glyphicon glyphicon-home"></span></p>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#"><p>Opcion <span class="glyphicon glyphicon-asterisk"></span></p></a>
+                        </li>
+                        <li>
+                            <a href="#"><p>Opcion <span class="glyphicon glyphicon-asterisk"></span></p></a>
+                        </li>
+                        <li>
+                            <a href="#"><p>Opcion <span class="glyphicon glyphicon-asterisk"></span></p></a>
+                        </li>
+                        <li>
+                            <a href="#"><p>Opcion <span class="glyphicon glyphicon-asterisk"></span></p></a>
+                        </li>
+                        <li>
+                            <a href="#"><p>Opcion <span class="glyphicon glyphicon-asterisk"></span></p></a>
+                        </li>
+                    </ui:insert>
+                </ul>
+            </div>
+            <!-- /#sidebar-wrapper -->
+
+            <!-- Page Content -->
+            <div id="page-content-wrapper">
+
+                <div class="container-fluid">
+                    <div class="row">
+                        <ui:insert name="contenido_template">
+                            <div class="col-lg-12">
+                                <h1>PLANTILLA BASE</h1>
+                                <p>Plantilla de la biblioteca de componentes COlOsSAL - UFPS
+                                    Recordar revizar el concepto y uso de los templates. basado en
+                                    bootstrap (por ende es responsive)</p>
+                                <p>asegurarse de que todo el codigo se encuentre dentro de las etiquetas <code>#page-content-wrapper</code>
+                                    y especial cuidado con el sistema de grids de bootstrap para asegurar el funcionamiento totalmente 
+                                    responsive.
+                                    <br/>
+                                    Usar la clase <code>#tite</code> para todo tipo de contenido que sea titulo, es parte de los estandares definidos
+                                    por el programa, usar la clase <code>#content-text</code> para todos los botones, labels, inputs y etc, es parte de 
+                                    los estandares definidos.</p>
+
+                            </div>
+                        </ui:insert>
+                    </div>
+                </div>
+            </div>
+            <!-- /#page-content-wrapper -->
+
+
+
+ 
+            <!-- footer -->
+            <div id="footer">
+                <div class="container" style="width: 100%">
+                    <div class="row">
+                        <div class="col-md-4 col-md-offset-4 text-center">
+                            <table style="width: 100%">
+                                <tr>
+                                    <td style="width: 50%;padding-right: 5px;">
+                                        <a title="Programa de Ingenieria de Sistemas" href="http://ingsistemas.ufps.edu.co" target="_blank">
+                                            <img src="http://gidis.ufps.edu.co/sgac/estilos/img/guia/logo%20horizontal.png" class="img" alt="..."/>
+                                        </a>
+                                    </td>
+                                    <td style="width: 50%;padding-left: 5px;">
+                                        <a title="Universidad Francisco de Paula Santander" href="http://ufps.edu.co" target="_blank">
+                                            <img src="http://gidis.ufps.edu.co/sgac/estilos/img/guia/horizontal_logo.png" class="img" alt="..."/>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p class="footertext">Copyright 2017</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </h:body>
+
+</html>

@@ -1,0 +1,156 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:a="http://xmlns.jcp.org/jsf/passthrough">
+    <h:head>
+        <meta http-equiv="X-UA-Compatible" content="edge, chrome=1" />
+        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta http-equiv="Pragma" content="no-cache" />
+        <meta http-equiv="Expires" content="-1" />
+    </h:head>
+    <body onload="toggle()">
+        <ui:composition template="./../templates/colossalBaseTemplate.xhtml">
+
+            <ui:define name="titulo_template">
+                COlOsSAL UFPS - BIBLIOTECA DE COMPONENTES
+            </ui:define>
+
+            <ui:define name="header_menu_template">
+                <h:form>
+                    
+                    
+                    #{notificacionBean.inicializarBean()}
+                    <p:commandLink id="cerrar_sesion" actionListener="#{logBean.cerrarSesion(componentBean)}" styleClass="link-ajuste header_menu " style="float: right">
+                        <p><span class="glyphicon glyphicon-log-out  icon-ajuste"></span></p> 
+                    </p:commandLink>
+                    <p:tooltip id="tooTipCerrarSession" for="cerrar_sesion" value="Cerrar Sesión" position="left"/>
+                    <p:commandLink action="#{componentBean.openAdminPanel()}" rendered="#{usuarioBean.esAdministrador()}" styleClass="link-ajuste header_menu " style="float: right" id="panel_admin" ><p><span class="glyphicon glyphicon-pencil  icon-ajuste"></span></p></p:commandLink>
+                    <p:tooltip id="toolTipadmin" for="panel_admin" value="Panel de Administración" position="left"/>
+                    <p:commandLink action="#{busquedaBean.openUserPanel(5,0,1,1,1)}" id="panel_perfil" styleClass="link-ajuste header_menu" style="float: right"><p><span class="glyphicon glyphicon-user icon-ajuste"></span></p></p:commandLink>
+                    <p:tooltip id="toolTipperfil" for="panel_perfil" value="Mi Perfil" position="left"/>
+
+                    <p:commandLink  action="#{componentBean.abrirUploadComponent()}"  id="panel_subir" styleClass="link-ajuste header_menu" style="float: right"><p><span class="glyphicon glyphicon-open  icon-ajuste"></span></p></p:commandLink>
+                    <p:tooltip id="toolTipsubir" for="panel_subir" value="Subir Componentes"  position="left"/>
+                    
+                    <div class="dropdown" style="float: right;">
+                        <a style="cursor: pointer;text-decoration: none" class="link-ajuste header_menu dropdown-toggle" data-toggle="dropdown">
+                            <span class="glyphicon glyphicon-bell icon-ajuste"/>
+                            <span class="badge">#{notificacionBean.cantidadNotificaciones}</span>
+                        </a>
+                        <ul class="dropdown-menu " >
+                            <table class="table">
+                                <ui:repeat value="#{notificacionBean.lNotificaciones}"  var="notificacion">
+                                    <tr>
+                                        <td class=" hover-table">
+                                            <p:commandLink action="#{notificacionBean.verNotificacion(notificacion)}">
+                                                <strong>#{administradorBean.prepararFechaYHora(notificacion.estadoIdestado.fechaGeneracion)}</strong><br/>
+                                                #{notificacionBean.limitarTexto(notificacion)}
+                                            </p:commandLink>
+                                        </td>
+                                    </tr>
+                                </ui:repeat>
+                            </table>
+                            <p:outputPanel rendered="#{notificacionBean.cantidadNotificaciones==0}">
+                                <table class="table">
+                                    <tr>
+                                        <td class="text-center">No hay notificaciones nuevas.</td>
+                                    </tr>
+                                </table>
+                            </p:outputPanel>
+                            <hr class="margin-reduction"/>
+                            <center>
+                                <p:commandLink  styleClass="margin-reduction" action="#{notificacionBean.verNotificaciones(1,1)}" value="Ver todas"/>
+                            </center>
+                        </ul>
+                    </div>
+                </h:form>
+            </ui:define>
+
+            <ui:define name="menu_sidebar_template"> 
+                <h:form>
+                    <li class="sidebar-brand">
+                        <p:commandLink action="#{componentBean.abrirInicio()}" style="margin: 0 auto"><span class="glyphicon glyphicon-home"></span>&nbsp;&nbsp;Menú de Inicio</p:commandLink>
+                    </li>
+                    <h:inputText onkeypress="desactivarEnter()" a:placeholder="Buscar Categorías" styleClass="form-control" style="width: 80%;margin: 0 auto;font-size: 13px" value="#{categoriaBean.categoria}">
+                        <p:ajax event="keyup" update="categoriaList" listener="#{categoriaBean.findCategoriesByName()}" />
+                    </h:inputText>
+                    <br/>
+                    <p:outputPanel id="categoriaList">
+                        <c:forEach var="categoria" items="#{categoriaBean.categorias}">
+                            <li>
+                                <p:commandLink action="#{busquedaBean.buscar(1,1,1,0)}">#{categoria.nombre}
+                                    <f:setPropertyActionListener value="#{categoria.idcategoria}"  target="#{busquedaBean.id_cat}" />
+                                </p:commandLink>
+                            </li>
+                        </c:forEach>
+                    </p:outputPanel>
+                </h:form>
+            </ui:define>
+
+            <ui:define name="contenido_template">
+                <h:form>
+                    <p:growl id="msgsComponente" widgetVar="msgsComponente"/>
+                    <h3 class="text-center">COlOsSAL UFPS</h3>
+                    <h4 class="text-center">Biblioteca de Componentes de Software Reutilizables</h4>
+                    <table class="text-center"  style="width: 350px;margin: 0 auto;">
+                        <tr>
+                            <td class="text-center">
+                                <h:inputText onkeypress="desactivarEnter()" styleClass="form-control" value="#{busquedaBean.busqueda}" size="30" a:placeholder="Buscar componentes...">
+
+                                </h:inputText>
+                            </td>
+                            <td class="text-center">
+                                &nbsp;
+                                <h:commandLink action="#{busquedaBean.buscarTexto(1,1,1)}">
+                                    <span class="glyphicon glyphicon-search"></span>
+                                </h:commandLink>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <h:commandLink action="#{busquedaAvanzadaBean.busquedaAvanzada()}">
+                                    Búsqueda avanzada
+                                </h:commandLink>
+                            </td>
+                        </tr>
+                    </table>
+                    <br/>
+                    <p:outputPanel rendered="#{componentBean.componentesRecientes.size()>0}">
+                        <h4 class="text-center">Componentes recientes</h4>
+                        <br/>
+                        <div class="row row-centered">
+                            <c:forEach var="componente" items="#{componentBean.componentesRecientes}" >
+                                <div class="col-md-3 col-centered" style="margin-bottom: 10px;">
+                                    <div class="thumbnail text-center box" style="margin: 0 auto;">
+                                        <p:commandLink action="#{busquedaBean.verComponente(componente.idComponente)}">
+                                            <img class="img-rounded img-responsive" src="#{recursoBean.getUrlLogo(componente)}"  style="width:100%"/>
+
+                                            <div class="caption">
+                                                <p>#{componente.nombre}</p>
+                                                <br/>
+                                                <p><pre>Version: #{componente.version}</pre></p>
+                                            </div>
+                                        </p:commandLink>
+                                    </div>
+                                </div>
+                            </c:forEach>
+                        </div>
+                        <div class="row row-centered">
+                            <ul class="pagination">
+                                <li>
+                                    <p:commandLink action="#{busquedaBean.buscar(1,1,4,0)}" >Ver más componentes</p:commandLink>
+                                </li>
+                            </ul>
+                        </div>
+                    </p:outputPanel>
+                </h:form>
+            </ui:define>
+
+        </ui:composition>
+    </body>
+</html>

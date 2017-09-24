@@ -1,0 +1,185 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+      xmlns:a="http://xmlns.jcp.org/jsf/passthrough">
+    <h:head>
+        <meta http-equiv="X-UA-Compatible" content="edge, chrome=1" />
+        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta http-equiv="Pragma" content="no-cache" />
+        <meta http-equiv="Expires" content="-1" />
+    </h:head>
+    <body>
+
+        <ui:composition template="./../templates/colossalBaseTemplate.xhtml">
+
+            <ui:define name="titulo_template">
+                 COlOsSAL UFPS - BIBLIOTECA DE COMPONENTES
+            </ui:define>
+
+            <ui:define name="header_menu_template">
+                <h:form>
+                    #{notificacionBean.inicializarBean()}
+                        <p:commandLink id="cerrar_sesion" actionListener="#{logBean.cerrarSesion(componentBean)}" styleClass="link-ajuste header_menu " style="float: right">
+                            <p><span class="glyphicon glyphicon-log-out  icon-ajuste"></span></p> 
+                        </p:commandLink>
+                        <p:tooltip id="tooTipCerrarSession" for="cerrar_sesion" value="Cerrar Sesión" position="left"/>
+                        <p:commandLink action="#{componentBean.openAdminPanel()}" rendered="#{usuarioBean.esAdministrador()}" styleClass="link-ajuste header_menu " style="float: right" id="panel_admin" ><p><span class="glyphicon glyphicon-pencil  icon-ajuste"></span></p></p:commandLink>
+                        <p:tooltip id="toolTipadmin" for="panel_admin" value="Panel de Administración" position="left"/>
+                        <p:commandLink action="#{busquedaBean.openUserPanel(5,0,1,1,1)}" id="panel_perfil" styleClass="link-ajuste header_menu" style="float: right"><p><span class="glyphicon glyphicon-user icon-ajuste"></span></p></p:commandLink>
+                        <p:tooltip id="toolTipperfil" for="panel_perfil" value="Mi Perfil" position="left"/>
+                        <p:commandLink action="#{componentBean.abrirUploadComponent()}"  id="panel_subir" styleClass="link-ajuste header_menu" style="float: right"><p><span class="glyphicon glyphicon-open  icon-ajuste"></span></p></p:commandLink>                  
+                        <p:tooltip id="toolTipsubir" for="panel_subir" value="Subir Componentes"  position="left"/>
+                        <div class="dropdown" style="float: right;">
+                            <a style="cursor: pointer;text-decoration: none" class="link-ajuste header_menu dropdown-toggle" data-toggle="dropdown">
+                                <span class="glyphicon glyphicon-bell icon-ajuste"/>
+                                <span class="badge">#{notificacionBean.cantidadNotificaciones}</span>
+                            </a>
+                            <ul class="dropdown-menu " >
+                                <table class="table">
+                                    <ui:repeat value="#{notificacionBean.lNotificaciones}"  var="notificacion">
+                                        <tr>
+                                            <td class=" hover-table">
+                                                <p:commandLink action="#{notificacionBean.verNotificacion(notificacion)}">
+                                                    <strong>#{administradorBean.prepararFechaYHora(notificacion.estadoIdestado.fechaGeneracion)}</strong><br/>
+                                                #{notificacionBean.limitarTexto(notificacion)}
+                                                </p:commandLink>
+                                            </td>
+                                        </tr>
+                                    </ui:repeat>
+                                </table>
+                                <p:outputPanel rendered="#{notificacionBean.cantidadNotificaciones==0}">
+                                    <table class="table">
+                                        <tr>
+                                            <td class="text-center">No hay notificaciones nuevas.</td>
+                                        </tr>
+                                    </table>
+                                </p:outputPanel>
+                                <hr class="margin-reduction"/>
+                                <center>
+                                    <p:commandLink  styleClass="margin-reduction" action="#{notificacionBean.verNotificaciones(1,1)}" value="Ver todas"/>
+                                </center>
+                            </ul>
+                        </div>
+                    </h:form>
+            </ui:define>
+
+            <ui:define name="menu_sidebar_template">
+                <h:form>
+                    <li class="sidebar-brand">
+                        <p:commandLink action="#{componentBean.abrirInicio()}" style="margin: 0 auto"><span class="glyphicon glyphicon-home"></span>&nbsp;&nbsp;Menú de Inicio</p:commandLink>
+                    </li>
+                    <h:inputText a:placeholder="Buscar Categorías" styleClass="form-control" style="width: 80%;margin: 0 auto;font-size: 13px" value="#{categoriaBean.categoria}">
+                        <p:ajax event="keyup" update="categoriaList" listener="#{categoriaBean.findCategoriesByName()}" />
+                    </h:inputText>
+                    <br/>
+                    <p:outputPanel id="categoriaList">
+                        <c:forEach var="categoria" items="#{categoriaBean.categorias}">
+                            <li>
+                                <p:commandLink action="#{busquedaBean.buscar(1,1,1,0)}">#{categoria.nombre}
+                                    <c:if test="#{busquedaBean.id_cat==categoria.idcategoria}">
+                                        <span class="glyphicon glyphicon-asterisk"></span>
+                                    </c:if>
+                                    <f:setPropertyActionListener value="#{categoria.idcategoria}"  target="#{busquedaBean.id_cat}" />
+                                </p:commandLink>
+                            </li>
+                        </c:forEach>
+                    </p:outputPanel>
+                </h:form>
+            </ui:define>
+
+            <ui:define name="contenido_template">
+                <h:form>
+                    <p:outputPanel rendered="#{busquedaBean.listaBusqueda.size()>0}">
+
+                        <p:outputPanel style="text-align: justify;"> 
+                            <table border="0" style="margin: 0 auto;width: 95%">
+                                <tr>
+                                    <td colspan="2">
+                                        <c:if test="#{busquedaBean.ident==2}">
+                                            <div class="alert alert-success alert-dismissable fade in">
+                                                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                                                Búsqueda realizada por el tag: #{busquedaBean.nameTag}
+                                            </div>
+                                        </c:if>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: none;width: 95%">
+                                        <h:inputText class="form-control right-space"
+                                                     id="globalFilter" 
+                                                     style="width: 100%;margin: 0 auto;font-size: 13px;" 
+                                                     a:placeholder="Filtrar búsqueda"
+                                                     value="#{busquedaBean.busqueda}"
+                                                     />
+                                    </td>
+                                    <td class="text-center">
+                                        <p:commandLink process="@this,globalFilter" action="#{busquedaBean.filtrar()}">
+                                            <span class="glyphicon glyphicon-search"></span>
+                                        </p:commandLink>
+                                    </td>
+                                </tr>
+                            </table>
+                        </p:outputPanel>
+                        <br/>
+                        <p:dataTable var="componente" value="#{busquedaBean.listaBusqueda}" 
+                                     rows="5"
+                                     styleClass="tabla-primefaces"
+                                     paginatorPosition="bottom"
+                                     emptyMessage="No se encontraron componentes que coincidan con tu búsqueda.">
+
+                            <p:column  filterStyle="display:none">
+                                <div class="row">
+                                    <div class="col-md-3 text-center">
+                                        <p:commandLink action="#{busquedaBean.verComponente(componente.idComponente)}">
+                                            <img class="img-rounded img-responsive" src="#{recursoBean.getUrlLogo(componente)}" alt="Lights" style="margin: 0 auto;max-width: 200px"/>
+                                        </p:commandLink>
+                                    </div>
+                                    <div class="col-md-9">
+                                        <p:commandLink style="color: red" value="#{componente.nombre}" action="#{busquedaBean.verComponente(componente.idComponente)}">
+                                        </p:commandLink><br/>
+                                        <h:outputText value="#{busquedaBean.limitarTexto(componente.descripcion)}"/><br/><br/>
+                                        <h:outputText value="Tags: "/>
+                                        <ui:repeat value="#{componente.componenteHasTagList}" var="tag" >
+                                            <p:commandLink  action="#{busquedaBean.componentesPorTag(tag.tag.idtag,1,0,0)}" styleClass="btn btn-default btn-tag" value="#{tag.tag.nombre}"  />
+                                        </ui:repeat>
+                                        <br/>
+                                    </div>
+                                </div>
+                            </p:column>
+                        </p:dataTable>
+                        <center>
+                            <p:outputPanel rendered="#{busquedaBean.calcularPaginasTotales()>1}">
+                                <ul class="pagination">
+                                    <li><p:commandLink action="#{busquedaBean.busqueda(1,-1)}"><span class="glyphicon glyphicon-menu-left"></span><span class="glyphicon glyphicon-menu-left"></span></p:commandLink></li>
+                                    <li><p:commandLink action="#{busquedaBean.busqueda(2,-1)}"><span class="glyphicon glyphicon-menu-left"></span></p:commandLink></li>
+                                    <c:forEach var="numero" items="#{busquedaBean.calcularPaginas()}">
+                                        <c:if test="#{busquedaBean.pagina == numero}">
+                                            <li class="active"><p:commandLink action="#{busquedaBean.buscar(numero,0)}">#{numero}</p:commandLink></li>  
+                                        </c:if>
+                                        <c:if test="#{busquedaBean.pagina != numero}">
+                                            <li><p:commandLink action="#{busquedaBean.busqueda(-1,numero)}">#{numero}</p:commandLink></li>  
+                                        </c:if>
+                                    </c:forEach>
+                                    <li><p:commandLink action="#{busquedaBean.busqueda(3,-1)}"><span class="glyphicon glyphicon-menu-right"></span></p:commandLink></li>
+                                    <li><p:commandLink action="#{busquedaBean.busqueda(4,-1)}"><span class="glyphicon glyphicon-menu-right"></span><span class="glyphicon glyphicon-menu-right"></span></p:commandLink></li>
+                                </ul>
+                            </p:outputPanel>
+                        </center>    
+                    </p:outputPanel>
+                    <p:outputPanel rendered="#{busquedaBean.listaBusqueda.size()==0}">
+                        <div class="alert alert-success">
+                            <strong>Oops!</strong> No se encontraron componentes que coincidan con tu búsqueda.
+                        </div>
+                    </p:outputPanel>
+                </h:form>
+            </ui:define>
+
+        </ui:composition>
+
+    </body>
+</html>

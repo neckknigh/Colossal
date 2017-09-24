@@ -1,0 +1,561 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:a="http://xmlns.jcp.org/jsf/passthrough">
+    <h:head>
+        <meta http-equiv="X-UA-Compatible" content="edge, chrome=1" />
+        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta http-equiv="Pragma" content="no-cache" />
+        <meta http-equiv="Expires" content="-1" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.2/jspdf.min.js"></script>
+    </h:head>
+    <body>
+         
+        <ui:composition template="./../templates/colossalBaseTemplate.xhtml">
+
+            <ui:define name="titulo_template">
+                COlOsSAL UFPS - BIBLIOTECA DE COMPONENTES
+            </ui:define>
+
+            <ui:define name="header_menu_template">
+                <h:form>
+                    #{componentBean.buscarComponente()}
+                    #{componentBean.checkComponente()}
+                    #{componentBean.aumentarVisualizaciones()}
+                    #{notificacionBean.inicializarBean()}
+                    <p:commandLink id="cerrar_sesion" actionListener="#{logBean.cerrarSesion(componentBean)}" styleClass="link-ajuste header_menu " style="float: right">
+                        <p><span class="glyphicon glyphicon-log-out  icon-ajuste"></span></p> 
+                    </p:commandLink>
+                    <p:tooltip id="tooTipCerrarSession" for="cerrar_sesion" value="Cerrar Sesión" position="left"/>
+                    <p:commandLink action="#{componentBean.openAdminPanel()}" rendered="#{usuarioBean.esAdministrador()}" styleClass="link-ajuste header_menu " style="float: right" id="panel_admin" ><p><span class="glyphicon glyphicon-pencil  icon-ajuste"></span></p></p:commandLink>
+                    <p:tooltip id="toolTipadmin" for="panel_admin" value="Panel de Administración" position="left"/>
+                    <p:commandLink action="#{busquedaBean.openUserPanel(5,0,1,1,1)}" id="panel_perfil" styleClass="link-ajuste header_menu" style="float: right"><p><span class="glyphicon glyphicon-user icon-ajuste"></span></p></p:commandLink>
+                    <p:tooltip id="toolTipperfil" for="panel_perfil" value="Mi Perfil" position="left"/>
+                    <p:commandLink action="#{componentBean.abrirUploadComponent()}"  id="panel_subir" styleClass="link-ajuste header_menu" style="float: right"><p><span class="glyphicon glyphicon-open  icon-ajuste"></span></p></p:commandLink>                  
+                    <p:tooltip id="toolTipsubir" for="panel_subir" value="Subir Componentes"  position="left"/>
+                    <div class="dropdown" style="float: right;">
+                        <a style="cursor: pointer;text-decoration: none" class="link-ajuste header_menu dropdown-toggle" data-toggle="dropdown">
+                            <span class="glyphicon glyphicon-bell icon-ajuste"/>
+                            <span class="badge">#{notificacionBean.cantidadNotificaciones}</span>
+                        </a>
+                        <ul class="dropdown-menu " >
+                            <table class="table">
+                                <ui:repeat value="#{notificacionBean.lNotificaciones}"  var="notificacion">
+                                    <tr>
+                                        <td class=" hover-table">
+                                            <p:commandLink action="#{notificacionBean.verNotificacion(notificacion)}">
+                                                <strong>#{administradorBean.prepararFechaYHora(notificacion.estadoIdestado.fechaGeneracion)}</strong><br/>
+                                                #{notificacionBean.limitarTexto(notificacion)}
+                                            </p:commandLink>
+                                        </td>
+                                    </tr>
+                                </ui:repeat>
+                            </table>
+                            <p:outputPanel rendered="#{notificacionBean.cantidadNotificaciones==0}">
+                                <table class="table">
+                                    <tr>
+                                        <td class="text-center">No hay notificaciones nuevas.</td>
+                                    </tr>
+                                </table>
+                            </p:outputPanel>
+                            <hr class="margin-reduction"/>
+                            <center>
+                                <p:commandLink  styleClass="margin-reduction" action="#{notificacionBean.verNotificaciones(1,1)}" value="Ver todas"/>
+                            </center>
+                        </ul>
+                    </div>
+                </h:form>
+            </ui:define>
+
+            <ui:define name="menu_sidebar_template">
+                <h:form>
+
+                    <li class="sidebar-brand">
+                        <p:commandLink action="#{componentBean.abrirInicio()}" style="margin: 0 auto"><span class="glyphicon glyphicon-home"></span>&nbsp;&nbsp;Menú de Inicio</p:commandLink>
+                    </li>
+                    <h:inputText a:placeholder="Buscar Categorías" styleClass="form-control" style="width: 80%;margin: 0 auto;font-size: 13px" value="#{categoriaBean.categoria}">
+                        <p:ajax event="keyup" update="categoriaList" listener="#{categoriaBean.findCategoriesByName()}" />
+                    </h:inputText>
+                    <br/>
+                    <p:outputPanel id="categoriaList">
+                        <c:forEach var="categoria" items="#{categoriaBean.categorias}">
+                            <li>
+                                <p:commandLink action="#{busquedaBean.buscar(1,1,1,0)}">#{categoria.nombre}
+                                    <c:if test="#{busquedaBean.id_cat==categoria.idcategoria}">
+                                        <span class="glyphicon glyphicon-asterisk"></span>
+                                    </c:if>
+                                    <f:setPropertyActionListener value="#{categoria.idcategoria}"  target="#{busquedaBean.id_cat}" />
+                                </p:commandLink>
+                            </li>
+                        </c:forEach>
+                    </p:outputPanel>
+                </h:form>
+            </ui:define>
+
+            <ui:define name="contenido_template">
+
+               
+                
+                <h:form id="formDetalles" >
+                    <p:outputPanel rendered="#{componentBean.componente==null}">
+                            <div class="alert alert-danger fade in">
+                                <h:commandLink class="close" action="componente" >&times;</h:commandLink>
+                                <strong>No se ha encontrado ningún componente!</strong> El componente no existe o ha sido borrado de la biblioteca.
+                            </div>
+                </p:outputPanel>
+                    <p:outputPanel rendered="#{componentBean.componente!=null}">
+                        <p:growl id="msgsDetalles" widgetVar="msgsDetalles"/>
+                        <div class="row">
+                            <div class="col-md-10 col-md-offset-1">
+
+
+                                #{recursoBean.setComponente(componentBean.componente)}
+
+                                <p:outputPanel rendered="#{recursoBean.findImagesComponent().size()>0}">
+                                    <div id="myCarousel" class="carousel slide" data-ride="carousel" >
+                                        <!-- Wrapper for slides -->
+                                        <center>
+                                            <div class="carousel-inner" id="imageView" role="listbox">
+                                                <div class="item active">
+                                                    <center>
+                                                        <img id="imagen" class="img-responsive" src="#{recursoBean.getUrlImagenInicial(recursoBean.findImagesComponent().get(0)) }"/>
+                                                    </center>
+                                                </div>
+                                            </div>
+                                        </center>
+                                        <!-- Left and right controls -->
+                                        <p:commandLink styleClass="left carousel-control">
+                                            <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+                                            <span class="sr-only">Previous</span>
+                                            <p:ajax listener="#{recursoBean.getNextImage(0)}" />
+                                        </p:commandLink>
+                                        <p:commandLink styleClass="right carousel-control">
+                                            <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+                                            <span class="sr-only">Next</span>
+                                            <p:ajax listener="#{recursoBean.getNextImage(1)}" />
+                                        </p:commandLink>
+                                    </div>
+                                </p:outputPanel>
+                                <div id="fichaComponente">
+                                    <div class="panel panel-success" >
+                                        <div class="panel-heading text-justify">
+                                            <table style="width: 100%">
+                                                <tr>
+                                                    <td style="width: 90%">Componente:</td>
+                                                    <td style="text-align: right">
+                                                        <a href="../../#{recursoBean.getURLPDF()}"  download="especificaciones-#{recursoBean.componente.idComponente}.pdf" data-toggle="tooltip" title="Descargar especificaciones del componente">
+                                                            <img src="../../resources/images/icon-pdf.png" style="width: 30px"></img>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                        <div class="panel-body text-justify">#{componentBean.componente.nombre}</div>
+
+                                        <div class="panel-heading text-justify">Autor:</div>
+                                        <div class="panel-body text-justify">#{componentBean.getUsuarioComponente().nombre}</div>
+
+                                        <div class="panel-heading text-justify">Descripción:</div>
+                                        <div class="panel-body text-justify "><pre class="pre-text-formating">#{componentBean.componente.descripcion}</pre></div>
+
+
+                                        <div class="panel-heading text-justify text-detalles">Intrucciones:</div>
+                                        <div class="panel-body text-justify"><pre class="pre-text-formating content-text">#{componentBean.componente.instrucciones}</pre></div>
+
+
+                                        <div class="panel-heading text-justify">Versión:</div>
+                                        <div class="panel-body text-justify">#{componentBean.componente.version}</div>
+
+                                        <div class="panel-heading text-justify">Tecnología:</div>
+                                        <div class="panel-body text-justify">#{componentBean.componente.tecnologia}</div>
+
+                                        <div class="panel-heading text-justify">Grado de reutilización:</div>
+                                        <div class="panel-body text-justify">#{componentBean.componente.gradoReutilizacion}</div>
+
+                                        <div class="panel-heading text-justify">Tags:</div>
+                                        <div class="panel-body text-justify">
+
+
+                                            <ui:repeat value="#{componentBean.componente.componenteHasTagList}" var="tag" >
+                                                <p:commandLink styleClass="btn btn-default btn-tag" action="#{busquedaBean.componentesPorTag(tag.tag.idtag,1,1,0)}" value="#{tag.tag.nombre}" />
+                                            </ui:repeat>
+                                        </div>
+
+                                        <div class="panel-heading text-justify">Dependencias:</div>
+                                        <div class="panel-body text-justify">
+                                            <c:if test="#{componentBean.componente.componenteHasDependencyList.size()==0}">
+                                                Ninguna
+                                            </c:if>
+                                            <ui:repeat value="#{componentBean.componente.componenteHasDependencyList}" var="componente" >
+                                                <p:commandLink rendered="#{componentBean.getEstadoComponente(componente.componenteDependency)}" styleClass="btn btn-default btn-tag" action="#{busquedaBean.verComponente(componente.componenteDependency.idComponente)}" value="#{componente.componenteDependency.nombre}" />
+                                                <p:commandLink rendered="#{not componentBean.getEstadoComponente(componente.componenteDependency)}" styleClass="btn btn-danger btn-tag" action="#{busquedaBean.verComponenteNoValido(componente.componenteDependency)}" value="#{componente.componenteDependency.nombre}" />
+                                            </ui:repeat>
+                                        </div>
+
+
+                                    </div>
+                                    <p:outputPanel rendered="#{recursoBean.findArchivosAdicComponent().size()>0}">
+                                        <div class="panel panel-success">
+                                            <div class="panel-heading text-justify">Recursos:</div>
+                                            <div class="panel-body text-justify table-responsive">
+                                                <table class="table">
+                                                    <ui:repeat var="archivo" value="#{recursoBean.findArchivosAdicComponent()}" varStatus="loop">
+                                                        <tr>
+                                                            <td>#{archivo.url}</td>
+                                                            <td class="text-right"><a href="../../#{recursoBean.getURLArchivos(archivo)}" target="_blank">
+                                                                    <span class="glyphicon glyphicon-eye-open"></span>
+                                                                </a>
+                                                                <a href="../../#{recursoBean.getURLArchivos(archivo)}" download="#{archivo.url}">
+                                                                    <span class="glyphicon glyphicon-download"></span>
+                                                                </a>
+                                                            </td>
+                                                        </tr>
+                                                    </ui:repeat>
+                                                </table>
+
+                                            </div>
+                                        </div>
+                                    </p:outputPanel>
+                                    <div class="panel panel-success">
+                                        <div class="panel-heading text-justify">Interfaz del Componente:</div>
+                                        <div class="panel-body text-justify">
+                                            <ui:repeat value="#{componentBean.componente.metodoList}" var="metodo">
+                                                <div class="panel-group">
+                                                    <div class="panel panel-success">
+                                                        <div class="panel-heading">
+                                                            <p class="detail">#{metodo.cabecera}</p>
+                                                        </div>
+                                                        <div class="panel-body">
+                                                            <pre class="pre-text-formating">#{metodo.descripcion}</pre>
+                                                            <br/>
+                                                            <p:outputPanel rendered="#{metodo.parametroList.size()>0}">
+                                                                <div class="table-responsive">
+                                                                    <table class="table">
+                                                                        <tr>
+                                                                            <th>Parámetro</th>
+                                                                            <th>Tipo</th>
+                                                                            <th>Detalle</th>
+                                                                            <th class="text-center">Opcional</th>
+                                                                        </tr>
+                                                                        <ui:repeat value="#{metodo.parametroList}" var="parametro">
+                                                                            <tr>
+                                                                                <td>#{parametro.parametro}</td>
+                                                                                <td class="detail"><p><code>#{parametro.tipo}</code></p></td>
+                                                                                <td>#{parametro.detalle}</td>
+                                                                                <td class="text-center">#{parametroBean.getValorDeOpcionalidad(parametro.valorOpcional)}</td>
+                                                                            </tr>
+                                                                        </ui:repeat>
+                                                                        <tr>
+                                                                            <td colspan="4">Valor de retorno: <code>#{metodo.valorRetorno}</code></td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </div>
+                                                            </p:outputPanel>
+                                                            <p>Ejemplos:</p><br/>
+                                                            <ui:repeat value="#{metodo.ejemploList}" var="ejemplo" varStatus="loop">
+
+                                                                <input type="button" class="btn btn-default" onclick="$('#my-code-element#{componentBean.index}').prettify();" style="width: 100%" data-toggle="collapse" data-target="#ejemplo#{componentBean.index}" value="Ver ejemplo #{loop.index+1}" />
+                                                                <div id="ejemplo#{componentBean.index}" class="collapse">
+                                                                    <pre class="prettyprint" id="my-code-element#{componentBean.index}">#{ejemplo.ejUso}</pre>
+                                                                </div>
+                                                                #{componentBean.aumentarIndex()}
+                                                            </ui:repeat>
+                                                            <br/><br/>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </ui:repeat>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="panel panel-success">
+                                    <div class="panel-body text-justify">
+                                        <br/>
+                                        <p:outputPanel rendered="#{componentBean.componente.revisionList.size()>0}">
+
+                                            <a data-toggle="collapse" href="#historial" onclick="toogleClassSpan(1)" style="text-decoration: none;color: #000">
+                                                <h4 class="panel-title">
+                                                    Historial de Versiones&nbsp;
+                                                    <span id="span-historial" class="glyphicon glyphicon-chevron-down" style="font-size: 13px;"></span>
+                                                </h4>
+                                            </a>
+                                            <br></br>
+                                            <div id="historial" class="collapse">
+
+                                                <div class="panel-group" id="accordion">
+                                                    <ui:repeat var="version" value="#{componentBean.componente.revisionList}" varStatus="loop" >
+                                                        <div class="panel panel-success">
+                                                            <div class="panel-heading">
+                                                                <a data-toggle="collapse" data-parent="#accordion" href="#collapse#{loop.index+1}" style="text-decoration: none;color: #336600">
+                                                                    <h4 class="panel-title">    
+                                                                        Versión: #{version.version}
+
+                                                                    </h4>
+                                                                </a>
+                                                            </div>
+                                                            <div id="collapse#{loop.index+1}" class="panel-collapse collapse #{componentBean.getClassColapse(loop.index+1)}">
+                                                                <div class="panel-body">
+                                                                    #{version.descripcionCambios} 
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </ui:repeat>   
+                                                </div>
+                                            </div>
+                                        </p:outputPanel>
+                                        <p:outputPanel id="panel_de_incidencia">
+                                            #{incidenciaBean.getIncidenciasXComponente(componentBean.componente.idComponente)}
+                                            <p:outputPanel  rendered="#{incidenciaBean.listIncidencias.size()>0 and usuarioBean.esAdministrador() }">
+
+                                                <a data-toggle="collapse" href="#incidencias" onclick="toogleClassSpan(2)" style="text-decoration: none;color: #000">
+                                                    <h4 class="panel-title">
+                                                        Incidencias Registradas: &nbsp;
+                                                        <span id="span-incidencia" class="glyphicon glyphicon-chevron-down" style="font-size: 13px;"></span>
+                                                    </h4>
+                                                </a>
+                                                <br></br>
+                                                <div id="incidencias" class="collapse">
+
+                                                    <div class="panel-group" id="accordion">
+
+                                                        <ui:repeat var="incidencia" value="#{incidenciaBean.listIncidencias}" varStatus="loop" >
+                                                            <div class="panel panel-danger">
+                                                                <div class="panel-heading">
+                                                                    <a data-toggle="collapse" data-parent="#accordion" href="#incidenciaCollapse#{loop.index+1}" style="text-decoration: none;color: #336600">
+                                                                        <h4 class="panel-title">
+                                                                            Fecha de Generación: #{administradorBean.prepararFechaYHora(incidencia.estadoIdestado.fechaGeneracion)}
+                                                                        </h4>
+                                                                    </a>
+                                                                </div>
+                                                                <div id="incidenciaCollapse#{loop.index+1}" class="panel-collapse collapse #{componentBean.getClassColapse(loop.index+1)}">
+                                                                    <div class="panel-body">
+                                                                        #{incidencia.descripcion}
+                                                                        <br/><br/>
+                                                                        <p:commandLink styleClass="btn btn-default" value="Revisar">
+                                                                            <p:ajax listener="#{administradorBean.revisarIncidencia(incidencia)}" update="formDetalles:panel_de_incidencia"/>
+                                                                        </p:commandLink>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </ui:repeat>   
+                                                    </div>
+                                                </div>
+                                            </p:outputPanel>
+                                        </p:outputPanel>
+                                        <div style="margin-left: 5px;" class="pull-left">
+
+                                            <p:commandLink id="listBtn" styleClass="btn btn-danger right-space"  >
+                                                <span class="glyphicon glyphicon-plus"></span> Añadir a
+                                            </p:commandLink>
+                                            <p:commandLink styleClass="btn btn-danger right-space" type="button" onclick="$('#incidenciaModal').modal('show')" rendered="#{usuarioBean.validarNoPropiedadComponente(componentBean.componente)}">
+                                                <span class="glyphicon glyphicon-flag"></span> Informar
+                                            </p:commandLink>
+                                            <a style="margin-left: -2.5px" href="../../#{recursoBean.getURLArchivoMain()}" class="btn btn-danger right-space" download="#{recursoBean.findArchivoMainComponent().url}">
+                                                <span class="glyphicon glyphicon-cloud-download"></span> Descargar
+                                            </a>
+                                            <p:commandLink styleClass="btn btn-danger right-space" type="button"  rendered="#{usuarioBean.validarPropiedadComponente(componentBean.componente) and (not usuarioBean.esAdministrador())}" oncomplete="$('#modalDelete').modal('show')" >
+                                                <span class="glyphicon glyphicon-trash"></span> Eliminar
+                                            </p:commandLink>
+                                            <p:commandLink styleClass="btn btn-danger right-space" type="button" rendered="#{usuarioBean.validarPropiedadComponente(componentBean.componente) or usuarioBean.esAdministrador()}" action="#{componentBean.openEdicionPanel()}">
+                                                <span class="glyphicon glyphicon-edit"></span> Editar
+                                            </p:commandLink>
+                                            <p:commandLink styleClass="btn btn-danger right-space" type="button" rendered="#{usuarioBean.esAdministrador()}" oncomplete="$('#modalGestion').modal('show')">
+                                                <span class="glyphicon glyphicon-cog"></span> Gestionar Estado
+                                            </p:commandLink>
+
+
+                                            <!--Panel Listas -->
+                                            <p:overlayPanel style="width:270px;" id="listPanel" widgetVar="overlayPanelList"  for="listBtn" hideEffect="fade" dynamic="true" >
+                                                #{listaBean.obtenerListasUsuario()}
+                                                <h:panelGroup id="panelGroupLista" style="text-align: left;" >
+
+                                                    <p:scrollPanel id="scrollpanel"  mode="native" styleClass="scrollPanelListas">
+                                                        <p:remoteCommand name="checkear" actionListener="#{listaBean.checkLista(componentBean.componente)}" />
+
+                                                        <ui:repeat var="item" value="#{listaBean.listas}" varStatus="loop">
+
+                                                            <h:column >
+
+                                                                <input id="box#{loop.index}"  type="checkbox" onchange="checkear(
+                                                                            [{name: 'index', value: '#{loop.index}'}
+                                                                            ])" >
+
+                                                                </input>
+                                                                #{listaBean.verificarBox(loop.index, item, componentBean.componente)}
+                                                                &nbsp; <h:outputText value="#{item.nombreLista}" />
+                                                            </h:column>
+                                                            <br></br>
+                                                        </ui:repeat>
+                                                    </p:scrollPanel>
+
+                                                    <p:outputPanel id="msgEmptyList">
+                                                        <p:outputPanel rendered="#{listaBean.listas.size()==0}" style="text-align: center; margin-top: 6px;">
+                                                            <p:outputLabel value="No tienes listas creadas" />
+                                                        </p:outputPanel>
+                                                    </p:outputPanel>
+
+                                                    <p:separator style="margin-top:10px;" />
+
+                                                    <p:panel id="panelLista"   styleClass="panelSinBorde" >
+                                                        <h:panelGrid columns="1" >
+
+                                                            <h:inputText id="nombreLista" value="#{listaBean.lista.nombreLista}" styleClass="form-control"  />
+                                                            <h:commandButton styleClass="btn btn-success pull-right" style="margin-top:2px;" value="Crear"   >
+                                                                <p:ajax process="@this,nombreLista"  listener="#{listaBean.crearLista(componentBean.componente)}" onstart="PF('bui').show()"  update="formDetalles:scrollpanel formDetalles:panelLista formDetalles:msgEmptyList formDetalles:msgsDetalles" /> 
+
+                                                            </h:commandButton>
+                                                        </h:panelGrid>
+                                                    </p:panel>
+
+
+                                                </h:panelGroup>
+
+
+
+                                            </p:overlayPanel>
+
+
+                                            <p:blockUI block="listPanel" widgetVar="bui">
+                                                Cargando
+                                                <p:graphicImage value="../../resources/images/ajaxloadingbar.gif"/>
+                                            </p:blockUI>
+                                            <!--Panel Listas -->
+
+                                        </div>
+                                        <br/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>  
+                    </p:outputPanel>
+                </h:form>
+
+
+
+                <div id="modalDelete" class="modal fade" role="dialog">
+                    <div class="modal-dialog ">
+
+                        <div class="modal-content">
+                            <div class="modal-header">
+                            </div>
+                            <div class="modal-body text-center">
+                                <div class="alert alert-danger ">
+                                    <strong>AVISO!</strong>¿Estás seguro de que deseas eliminar el componente de la Biblioteca?
+                                </div>
+                                <h:form>
+                                    <h:commandLink class="btn btn-danger right-space" value="Eliminar" action="#{componentBean.eliminarComponente()}" />
+                                        
+                                    
+                                    <h:commandButton class="btn btn-default" value="Cancelar" >
+                                        <p:ajax oncomplete="$('#modalDelete').modal('hide')"  />
+                                    </h:commandButton>
+                                </h:form>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                        </div>
+                    </div>
+
+                </div>
+
+                <div id="modalGestion" class="modal fade" role="dialog">
+                    <div class="modal-dialog ">
+
+                        <div class="modal-content">
+                            <div class="modal-header">
+                            </div>
+                            <div class="modal-body text-center">
+                                <h:form>
+                                    <div class="alert alert-danger ">
+                                        <strong>AVISO!</strong><br/>¿Estás seguro de cambiar el estado del componente?<br/>
+                                        Por favor, recuerde tener cuidado al tomar su decisión y también que el campo de observación es obligatorio.
+                                    </div>
+                                    <div id="aviso"></div>
+                                    <p:outputPanel id="panelGestion">
+                                        <p>Observación:</p>
+                                        <h:inputTextarea styleClass="form-control" id="observacion" style="resize: vertical" value="#{administradorBean.notificacion.mensaje}"/>
+                                        <br/>
+                                        <p:outputPanel rendered="#{componentBean.getEstadoComponente().equalsIgnoreCase('Aprobado')}">
+                                            <h:commandLink class="btn btn-danger right-space" value="Rechazar" >
+                                                <p:ajax process="@this,observacion" update="panelGestion" listener="#{administradorBean.cambiarEstadoComponente(3,componentBean.componente)}" />
+                                            </h:commandLink>
+                                            <h:commandLink class="btn btn-danger right-space" value="Eliminar" >
+                                                <p:ajax process="@this,observacion" update="panelGestion" listener="#{administradorBean.cambiarEstadoComponente(4,componentBean.componente)}" />
+                                            </h:commandLink>
+                                            <h:commandButton class="btn btn-default" value="Cancelar" >
+                                                <p:ajax oncomplete="$('#modalGestion').modal('hide')" />
+                                            </h:commandButton>
+                                        </p:outputPanel>
+                                        <p:outputPanel rendered="#{componentBean.getEstadoComponente().equalsIgnoreCase('Pendiente')}">
+                                            <h:commandLink class="btn btn-danger right-space" value="Aprobar" >
+                                                <p:ajax process="@this,observacion" update="panelGestion" listener="#{administradorBean.cambiarEstadoComponente(1,componentBean.componente)}" />
+                                            </h:commandLink>
+                                            <h:commandLink class="btn btn-danger right-space" value="Rechazar" >
+                                                <p:ajax  process="@this,observacion" update="panelGestion" listener="#{administradorBean.cambiarEstadoComponente(3,componentBean.componente)}" />
+                                            </h:commandLink>
+                                            <h:commandLink class="btn btn-danger right-space" value="Eliminar" >
+                                                <p:ajax process="@this,observacion" update="panelGestion" listener="#{administradorBean.cambiarEstadoComponente(4,componentBean.componente)}"  />
+                                            </h:commandLink>
+                                            <h:commandButton class="btn btn-default" value="Cancelar" >
+                                                <p:ajax oncomplete="$('#modalGestion').modal('hide')"  />
+                                            </h:commandButton>
+                                        </p:outputPanel>
+                                        <p:outputPanel rendered="#{componentBean.getEstadoComponente().equalsIgnoreCase('Rechazado')}">
+                                            <h:commandLink class="btn btn-danger right-space" value="Eliminar" >
+                                                <p:ajax process="@this,observacion" update="panelGestion" listener="#{administradorBean.cambiarEstadoComponente(4,componentBean.componente)}" />
+                                            </h:commandLink>
+                                            <h:commandButton class="btn btn-default" value="Cancelar" >
+                                                <p:ajax oncomplete="$('#modalGestion').modal('hide')"  />
+                                            </h:commandButton>
+                                        </p:outputPanel>
+                                        <p:outputPanel rendered="#{componentBean.getEstadoComponente().equalsIgnoreCase('Eliminado')}">
+                                            <h:commandLink class="btn btn-danger right-space" value="Recuperar" >
+                                                <p:ajax process="@this,observacion" update="panelGestion" listener="#{administradorBean.cambiarEstadoComponente(2,componentBean.componente)}" />
+                                            </h:commandLink>
+                                            <h:commandButton class="btn btn-default" value="Cancelar" >
+                                                <p:ajax oncomplete="$('#modalGestion').modal('hide')"  />
+                                            </h:commandButton>
+                                        </p:outputPanel>
+                                    </p:outputPanel>
+                                </h:form>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                        </div>
+                    </div>
+
+                </div>
+                <div id="incidenciaModal" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <h:form>
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                    <h4 class="modal-title">Reportar Incidencia en el componente: #{componentBean.componente.nombre}</h4>
+                                </div>
+                                <div class="modal-body">
+                                    <h:inputTextarea id="incidenciaTxt" class="form-control" value="#{incidenciaBean.incidencia.descripcion}">
+                                    </h:inputTextarea>
+                                </div>
+                                <div class="modal-footer">
+                                    <center>
+                                        <p:commandLink styleClass="btn btn-danger"  value="Enviar" actionListener="#{incidenciaBean.registrarIncidencia(componentBean.componente)}" oncomplete="$('#incidenciaModal').modal('hide')" update="incidenciaTxt :formDetalles:msgsDetalles"></p:commandLink>
+                                        <p:commandLink styleClass="btn btn-default" value="Cancelar" onclick="$('#incidenciaModal').modal('hide')" />
+
+                                    </center>
+                                </div>
+                            </h:form>
+                        </div>
+
+                    </div>
+                </div>
+            </ui:define>
+        </ui:composition>
+    </body>
+</html>

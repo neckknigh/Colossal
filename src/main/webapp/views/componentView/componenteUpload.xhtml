@@ -1,0 +1,883 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:jsf="http://xmlns.jcp.org/jsf"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+      xmlns:a="http://xmlns.jcp.org/jsf/passthrough"
+      >
+
+    <body >
+        <h:outputStylesheet library="css" name="primefaces-override.css" />
+        <ui:composition template="./../templates/colossalBaseTemplate.xhtml">
+
+            <ui:define name="titulo_template">
+                COlOsSAL UFPS - BIBLIOTECA DE COMPONENTES
+
+            </ui:define>
+
+
+
+            <ui:define name="header_menu_template">
+                <h:form>
+                    #{notificacionBean.inicializarBean()}
+                    <p:commandLink id="cerrar_sesion" actionListener="#{logBean.cerrarSesion(componentBean)}" styleClass="link-ajuste header_menu " style="float: right">
+                        <p><span class="glyphicon glyphicon-log-out  icon-ajuste"></span></p> 
+                    </p:commandLink>
+                    <p:tooltip id="tooTipCerrarSession" for="cerrar_sesion" value="Cerrar Sesión" position="left"/>
+                    <p:commandLink action="#{componentBean.openAdminPanel()}" rendered="#{usuarioBean.esAdministrador()}" styleClass="link-ajuste header_menu " style="float: right" id="panel_admin" ><p><span class="glyphicon glyphicon-pencil  icon-ajuste"></span></p></p:commandLink>
+                    <p:tooltip id="toolTipadmin" for="panel_admin" value="Panel de Administración" position="left"/>
+                    <p:commandLink action="#{busquedaBean.openUserPanel(5,0,1,1,1)}" id="panel_perfil" styleClass="link-ajuste header_menu" style="float: right"><p><span class="glyphicon glyphicon-user icon-ajuste"></span></p></p:commandLink>
+                    <p:tooltip id="toolTipperfil" for="panel_perfil" value="Mi Perfil" position="left"/>
+                    <p:commandLink action="#{componentBean.abrirUploadComponent()}"  id="panel_subir" styleClass="link-ajuste header_menu" style="float: right"><p><span class="glyphicon glyphicon-open  icon-ajuste"></span></p></p:commandLink>                  
+                    <p:tooltip id="toolTipsubir" for="panel_subir" value="Subir Componentes"  position="left"/>
+                    <div class="dropdown" style="float: right;">
+                        <a style="cursor: pointer;text-decoration: none" class="link-ajuste header_menu dropdown-toggle" data-toggle="dropdown">
+                            <span class="glyphicon glyphicon-bell icon-ajuste"/>
+                            <span class="badge">#{notificacionBean.cantidadNotificaciones}</span>
+                        </a>
+                        <ul class="dropdown-menu " >
+                            <table class="table">
+                                <ui:repeat value="#{notificacionBean.lNotificaciones}"  var="notificacion">
+                                    <tr>
+                                        <td class=" hover-table">
+                                            <p:commandLink action="#{notificacionBean.verNotificacion(notificacion)}">
+                                                <strong>#{administradorBean.prepararFechaYHora(notificacion.estadoIdestado.fechaGeneracion)}</strong><br/>
+                                                #{notificacionBean.limitarTexto(notificacion)}
+                                            </p:commandLink>
+                                        </td>
+                                    </tr>
+                                </ui:repeat>
+                            </table>
+                            <p:outputPanel rendered="#{notificacionBean.cantidadNotificaciones==0}">
+                                <table class="table">
+                                    <tr>
+                                        <td class="text-center">No hay notificaciones nuevas.</td>
+                                    </tr>
+                                </table>
+                            </p:outputPanel>
+                            <hr class="margin-reduction"/>
+                            <center>
+                                <p:commandLink  styleClass="margin-reduction" action="#{notificacionBean.verNotificaciones(1,1)}" value="Ver todas"/>
+                            </center>
+                        </ul>
+                    </div>
+                </h:form>
+            </ui:define>
+
+
+
+            <ui:define name="menu_sidebar_template">
+                <h:form onsubmit="return false;">
+                    <li class="sidebar-brand">
+                        <p:commandLink action="#{componentBean.abrirInicio()}" style="margin: 0 auto"><span class="glyphicon glyphicon-home"></span>&nbsp;&nbsp;Menú de Inicio</p:commandLink>
+                    </li>
+                    <h:inputText a:placeholder="Buscar Categorías" styleClass="form-control" style="width: 80%;margin: 0 auto;font-size: 13px" value="#{categoriaBean.categoria}">
+                        <p:ajax event="keyup" update="categoriaList" listener="#{categoriaBean.findCategoriesByName()}" />
+                    </h:inputText>
+                    <br/>
+                    <p:outputPanel id="categoriaList">
+                        <c:forEach var="categoria" items="#{categoriaBean.categorias}">
+                            <li>
+                                <p:commandLink action="#{busquedaBean.buscar(1,1,1,0)}">#{categoria.nombre}
+                                    <f:setPropertyActionListener value="#{categoria.idcategoria}"  target="#{busquedaBean.id_cat}" />
+                                </p:commandLink>
+                            </li>
+                        </c:forEach>
+                    </p:outputPanel>
+                </h:form>
+            </ui:define>
+
+
+            <ui:define name="contenido_template">
+
+                <h2 class="text-center">
+                    <h:outputText value="PANEL DE SUBIDA DE COMPONENTES"/>
+                </h2>
+                <div class="col-md-10 col-md-offset-1" >
+                    <h:form id="form" enctype="multipart/form-data" onsubmit="return false;">
+
+                        <p:growl id="msgsEdicion"  widgetVar="msgsEdit"/>
+                        <h:panelGroup id="padding" layout="block" >
+
+                            <!-- panel 1 -->
+                            <p:panel id="panelComp"  rendered="#{componentBean.isActivePanel(1)}">
+                                <br/>
+                                <div class="ui-fluid">
+                                    <p:panelGrid columns="1"  layout="grid" styleClass="ui-panelgrid-blank">  
+                                        <p:outputLabel value="Nombre:" styleClass="lbl-text">
+                                            <a  data-toggle="tooltip" title="Ingresa el nombre del componente!"><span class="glyphicon glyphicon-question-sign icon-small"></span></a>
+                                        </p:outputLabel>
+                                        <h:inputText onkeypress="desactivarEnter()" size="100" styleClass="form-control" id="nombreCom" value="#{componentBean.componente.nombre}" title="Nombre" required="true" requiredMessage="Debes indicar un nombre para el Componente!"/>
+                                        <h:outputLabel value="Descripción:"  styleClass="lbl-text">
+                                            <a  data-toggle="tooltip" title="Ingresa un texto descriptivo que indique de qué se trata tu componente!"><span class="glyphicon glyphicon-question-sign icon-small"></span></a>
+                                        </h:outputLabel>
+                                        <h:inputTextarea styleClass="form-control area-text" rows="4" cols="30" id="descripcionCom" value="#{componentBean.componente.descripcion}" title="Descripcion" required="true" requiredMessage="Debes indicar una descripción para el Componente!"/>
+                                        <h:outputLabel value="Instrucciones:"  styleClass="lbl-text">
+                                            <a  data-toggle="tooltip" title="Ingresa las instrucciones necesarias que permitan llevar a cabo la implementación satisfactoria de tu componente!"><span class="glyphicon glyphicon-question-sign icon-small"></span></a>
+                                        </h:outputLabel>
+                                        <h:inputTextarea styleClass="form-control area-text" rows="4"  cols="30"  id="instruccionesCom" value="#{componentBean.componente.instrucciones}" title="Instrucciones" required="true" requiredMessage="Debes indicar las instrucciones para el Componente!"/>
+                                        <h:outputLabel value="Versión:"  styleClass="lbl-text">
+                                            <a  data-toggle="tooltip" title="Indica cual es la versión del componente!"><span class="glyphicon glyphicon-question-sign icon-small"></span></a>
+                                        </h:outputLabel>
+                                        <h:inputText onkeypress="desactivarEnter()"  styleClass="form-control" id="versionCom" value="#{componentBean.versionComp}" title="Version" required="true"  requiredMessage="Debes indicar una versión para el Componente!"/>
+
+                                                                                <h:outputLabel value="Grado de reutilizacion:"  styleClass="lbl-text">
+                                            <a  data-toggle="tooltip" title="Indica el grado de reutilizacion del componente."><span class="glyphicon glyphicon-question-sign icon-small"></span></a>
+                                        </h:outputLabel>
+                                        <h:inputText onkeypress="desactivarEnter()"  styleClass="form-control" id="gradoReutilizacion" value="#{componentBean.componente.gradoReutilizacion}" title="Grado de reutilización"/>
+                                        
+                                        <h:outputLabel value="Tecnología:"  styleClass="lbl-text">
+                                            <a  data-toggle="tooltip" title="Indica la tecnología en la cual está desarrollado el componente"><span class="glyphicon glyphicon-question-sign icon-small"></span></a>
+                                        </h:outputLabel>
+                                        <h:inputText  styleClass="form-control" id="tecnologia"  title="Tecnologia" value="#{componentBean.componente.tecnologia}" required="true"  requiredMessage="Debes indicar la tecnología en la cual fue desarrollado el componente"/>
+                                        <h:outputLabel value="Tags:"  styleClass="lbl-text" >
+                                            <a  data-toggle="tooltip" title="Los tags son palabras clave relacionadas con el componente. Debes ingresar al menos 3!"><span class="glyphicon glyphicon-question-sign icon-small"></span></a>
+                                        </h:outputLabel>
+
+                                        <p:autoComplete onkeypress="desactivarEnter()" id="tagsSelected" multiple="true" maxResults="5" value="#{tagBean.tagsSeleccionados}" completeMethod="#{tagBean.completeTag}"
+
+                                                        var="tag" itemLabel="#{tag.nombre}" itemValue="#{tag}" converter="tagConverter" forceSelection="false" queryDelay="580" >
+                                            <p:ajax event="itemSelect" listener="#{tagBean.onItemSelect}" />
+                                            <p:ajax event="itemUnselect" listener="#{tagBean.onItemUnSelect}"  />
+                                            <p:column>
+                                                <h:outputText value="#{tag.nombre}" />
+                                            </p:column>
+
+                                        </p:autoComplete>
+
+                                        <h:outputLabel value="Dependencias:"  styleClass="lbl-text" >
+                                            <a  data-toggle="tooltip" title="(Opcional) Indique de cuales otros componentes depende el tuyo!"><span class="glyphicon glyphicon-question-sign icon-small"></span></a>
+                                        </h:outputLabel>
+
+                                        <p:autoComplete onkeypress="desactivarEnter()" id="depSelected" multiple="true" maxResults="5"  completeMethod="#{dependenciaBean.completeComponent}"
+
+                                                        var="componente" itemLabel="#{componente.nombre}" itemValue="#{componente}" converter="componentConverter" forceSelection="true" queryDelay="580" >
+                                            <p:ajax event="itemSelect" listener="#{dependenciaBean.onItemSelect}" />
+                                            <p:ajax event="itemUnselect" listener="#{dependenciaBean.onItemUnSelect}"  />
+                                            <p:column>
+                                                <h:outputText value="#{componente.nombre}" />
+                                            </p:column>
+
+                                        </p:autoComplete>
+
+                                        <br/>
+                                        <a href="#" data-toggle="tooltip" title="Haga click para seleccionar las categorías de tu componente!" style="text-decoration: none">
+                                            <button onkeypress="desactivarEnter()" type="button" class="btn btn-success btn-md" data-toggle="modal" data-target="#myModal">Seleccionar Categorías</button>
+                                        </a>
+                                        <br/>
+                                        <p:separator/>
+                                    </p:panelGrid>
+
+                                    <h:outputLabel value="Logo:"  >
+                                        <a  data-toggle="tooltip" title="(Opcional) Esta será la imagen que identificará a tu componente dentro de la Biblioteca!"><span class="glyphicon glyphicon-question-sign icon-small"></span></a>
+                                    </h:outputLabel> 
+                                    <center>
+                                        <p:outputPanel id="fileUploadLogo">
+                                            <p:fileUpload   mode="advanced"
+                                                            update="form:fileUploadLogo" 
+                                                            value="#{recursoBean.logo}"
+                                                            auto="true"
+                                                            fileUploadListener="#{recursoBean.handleUploadLogo}"
+                                                            sizeLimit="5242880" 
+                                                            invalidSizeMessage="La imagen supera los 5 MB permitidos!" 
+                                                            invalidFileMessage="El archivo que seleccionaste no es una imagen!"
+                                                            a:onchange="guardarLogo(this)"
+                                                            label="Seleccionar Logo"
+                                                            allowTypes="/(\.|\/)(jpe?g|png)$/"/>
+
+                                            <p:outputPanel rendered="#{recursoBean.hayLogo}">
+
+
+                                                <div class="table-responsive">
+                                                    <table class="table" border="0">
+                                                        <tr>
+                                                            <th>Imagen</th>
+                                                            <th class="text-center">Nombre</th>
+                                                            <th class="text-center td-space">Accion</th>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="width: 200px;"><img id="output" class="img-responsive"/>
+                                                                #{recursoBean.cargarImagenLogo()}
+                                                            </td>
+                                                            <td class="text-center"><p:outputLabel id="logoName" value="#{recursoBean.logo.fileName}" />  </td>
+                                                            <td class="text-center td-space" >
+                                                                <p:outputPanel id="innerPanelLogo" >
+                                                                    <h:commandLink class="link-style-close" style="color:red">X
+                                                                        <p:ajax listener="#{recursoBean.eliminarLogo()}" update="form:fileUploadLogo" /> 
+                                                                    </h:commandLink>
+                                                                </p:outputPanel>
+
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                            </p:outputPanel>
+
+                                        </p:outputPanel>
+                                    </center>
+                                </div>
+
+
+                                <br/>
+                                <div>
+                                    <h:commandLink styleClass="btn btn-danger content-text pull-right" >
+                                        <span class="glyphicon glyphicon-arrow-right icon-white"></span>
+                                        <p:ajax process="panelComp,fileUploadLogo" listener="#{componentBean.showSecondPanel(tagBean, categoriaBean)}" oncomplete="tooltip()" update=":form:msgsEdicion" />
+                                    </h:commandLink>
+                                    <br/><br/>  
+                                </div>
+                            </p:panel>
+
+                            <!-- panel 1 -->
+
+                            <!-- panel 2 -->
+                            <p:panel  id="panelMethod" rendered="#{componentBean.isActivePanel(2)}" >
+                                <p:outputPanel>
+                                    <br/>
+                                    <h:outputLabel value="Servicios del componente" />
+                                    <br/>
+                                    <h:outputLabel value="Cabecera:" for="cabecera" >
+                                        <a  data-toggle="tooltip" title="Indica el nombre que tendrá el método (sin la lista de parámetros). Debe seguir las reglas de la tecnología subyacente! Ej. miMetodo()!"><span class="glyphicon glyphicon-question-sign icon-small"></span></a>
+                                    </h:outputLabel>
+                                    <h:inputText onkeypress="desactivarEnter()" size="100" styleClass="form-control" id="cabecera" value="#{metodoBean.metodo.cabecera}" title="Cabecera" />
+
+                                    <h:outputLabel value="Descripción:" for="descripcion">
+                                        <a  data-toggle="tooltip" title="Describe cual es función que efectúa el método!"><span class="glyphicon glyphicon-question-sign icon-small"></span></a>
+                                    </h:outputLabel>
+                                    <h:inputTextarea class="form-control area-text editor" rows="4" cols="30" id="descripcion" value="#{metodoBean.metodo.descripcion}" title="Descripcion" />
+                                    <h:outputLabel value="Valor de Retorno:" for="valorRetorno" >
+                                        <a  data-toggle="tooltip" title="Indica el tipo del valor que devuelve el método. Si el método no devuelve ningún valor este tipo será void! Ej. object"><span class="glyphicon glyphicon-question-sign icon-small"></span></a>
+                                    </h:outputLabel>
+                                    <h:inputText onkeypress="desactivarEnter()" styleClass="form-control" id="valorRetorno" value="#{metodoBean.metodo.valorRetorno}" title="ValorRetorno" />
+
+
+
+                                </p:outputPanel>
+
+
+                                <!-- Parameter Section -->
+
+                                <p:outputPanel id="panelParametros">
+                                    <p:separator />
+                                    <p:outputLabel value="Parámetros" />
+                                    <div class="table-responsive">
+                                        <h:panelGrid id="panelgridParms"  columns="1" style="width: 100%" >
+                                            <p:row>
+                                                <c:if test="#{parametroBean.parametros.size() == 0}">
+                                                    <div class="alert alert-success fade in">
+                                                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                                                        <strong>Atención!</strong>  No ha agregado ningún parámetro.
+                                                    </div>
+                                                </c:if>
+                                                <p:outputPanel id="outPutPanelPar">
+                                                    <c:if test="#{parametroBean.parametros.size() > 0}">
+                                                        <center>
+                                                            <h:dataTable id="tablePar" value="#{parametroBean.parametros}" var="item"  class="table">
+                                                                <h:column >
+                                                                    <f:facet name="header">
+                                                                        <center><h:outputText value="Parámetro"/></center>
+                                                                    </f:facet>
+                                                                    <h:outputText   value="#{item.parametro}"/>
+                                                                </h:column>
+                                                                <h:column>
+                                                                    <f:facet name="header">
+                                                                        <center><h:outputText value="Tipo"/></center>
+                                                                    </f:facet>
+                                                                    <h:outputText value="#{item.tipo}"/>
+                                                                </h:column>
+                                                                <h:column>
+                                                                    <f:facet name="header">
+                                                                        <center><h:outputText value="Detalle"/></center>
+                                                                    </f:facet>
+                                                                    <h:outputText value="#{item.detalle}"/>
+                                                                </h:column>
+                                                                <h:column class="text-center">
+                                                                    <f:facet name="header">
+                                                                        <center><h:outputText value="Opcional"/></center>
+                                                                    </f:facet>
+                                                                    <center><h:outputText class="text-center" value="#{item.valorOpcional == 1? 'Si': 'No'}"/></center>
+                                                                </h:column>
+
+                                                                <h:column>
+                                                                    <f:facet name="header">
+                                                                        <center><h:outputText value="Acción"/></center>
+                                                                    </f:facet>
+                                                                    <center>
+                                                                        <p:commandLink value="X" style="color: red;">
+                                                                            <p:ajax listener="#{parametroBean.removeParameter(item)}"  update="form:panelgridParms form:fragmentParametro :form:msgsEdicion" />
+                                                                        </p:commandLink>
+
+
+                                                                        <p:commandLink style="border: none;
+                                                                                       background:transparent;
+                                                                                       color: red;
+                                                                                       padding-top: 0px;
+                                                                                       padding-bottom: 0px;
+                                                                                       padding-left: 0px;
+                                                                                       padding-right: 0px;
+                                                                                       text-decoration: none;">
+                                                                            <span class="glyphicon glyphicon-edit"></span>
+                                                                            <p:ajax listener="#{parametroBean.editParameter(item)}" update="form:fragmentParametro" />
+                                                                        </p:commandLink>
+                                                                    </center>
+                                                                </h:column>
+
+                                                            </h:dataTable>
+                                                        </center>
+                                                    </c:if>
+                                                </p:outputPanel>
+
+                                            </p:row>
+                                        </h:panelGrid>
+                                    </div>
+
+                                </p:outputPanel>
+
+
+                                <h:commandButton style="margin-top:10px;" class="btn btn-success btn-md" value="Agregar Parámetro" >
+                                    <p:ajax  listener="#{parametroBean.changeStatusPar()}" update="form:fragmentParametro"  oncomplete="tooltip()"/>
+
+                                </h:commandButton>
+
+
+
+
+
+                                <p:outputPanel id="fragmentParametro">
+
+                                    <p:panel id="panelParametro" rendered="#{parametroBean.showPanelParam}">
+
+                                        <p:outputLabel value="Parámetro:" for="parametro">
+                                            <a  data-toggle="tooltip" title="Ingresa el nombre del parámetro! Ej: miParametro"><span class="glyphicon glyphicon-question-sign icon-small"></span></a>
+                                        </p:outputLabel>
+                                        <h:inputText onkeypress="desactivarEnter()" class="form-control" id="parametro" value="#{parametroBean.parametro.parametro}" title="Parametro" />
+
+                                        <p:outputLabel value="Tipo:" for="tipo" >
+                                            <a  data-toggle="tooltip" title="Ingresa el tipo del parámetro!"><span class="glyphicon glyphicon-question-sign icon-small"></span></a>
+                                        </p:outputLabel>
+                                        <h:inputText onkeypress="desactivarEnter()" class="form-control" id="tipo" value="#{parametroBean.parametro.tipo}" title="Tipo" />
+
+                                        <p:outputLabel value="Detalle:" for="detalle" >
+                                            <a  data-toggle="tooltip" title="Ingresa una descripción para el parámetro!"><span class="glyphicon glyphicon-question-sign icon-small"></span></a>
+                                        </p:outputLabel>
+                                        <h:inputTextarea class="form-control area-text" rows="4" cols="30" id="detalle" value="#{parametroBean.parametro.detalle}" title="Detalle" />
+                                        <br/>
+
+                                        <p:outputLabel value="Opcional: " >
+                                            <a  data-toggle="tooltip" title="Indica si el parámetro es opcional o no!"><span class="glyphicon glyphicon-question-sign icon-small"></span></a>
+                                        </p:outputLabel>
+                                        <p:selectBooleanCheckbox style="margin-left: 10px" id="myCheckbox" value="#{parametroBean.opcional}">
+                                            <p:ajax listener="#{parametroBean.onCheckEvent}"  />
+                                        </p:selectBooleanCheckbox>
+                                        <br/>
+                                        <br/>
+                                        <p:commandLink id="btnSaveP" styleClass="btn btn-success" style="color: white" value="Guardar" oncomplete="tooltip()"   >
+                                            <p:ajax process="panelMethod" listener="#{parametroBean.addParameter()}" update="form:panelParametros form:fragmentParametro :form:msgsEdicion" />
+                                        </p:commandLink>
+
+                                    </p:panel>
+
+                                </p:outputPanel>
+
+
+
+
+
+                                <br/>
+
+                                <p:outputPanel id="fragmentExample">
+
+                                    <p:separator />
+                                    <p:outputLabel value="Ejemplos" /><br/>
+                                    <c:if test="#{ejemploBean.ejemplos.size()==0}">
+                                        <div class="alert alert-danger">
+                                            <strong>Atención!</strong>  No ha registrado ningún ejemplo.
+                                        </div>
+                                    </c:if>
+
+                                    <!-- Listado de Ejemplos Agregados -->
+
+                                    <c:forEach   var="ejemplo" items="#{ejemploBean.ejemplos}" varStatus="status">
+                                        <center>
+                                            <p:commandLink styleClass="btn btn-default" style="width: 100%" update="form:exampleDetail" value="Ver Detalles Ejemplo #{status.index+1}" oncomplete="$('#exampleDialog').modal('show');$('#my-code-element').prettify();">
+                                                <p:ajax process="@this" update="form:exampleDetail" listener="#{ejemploBean.setSelectedExample(ejemplo)}"/>
+
+                                            </p:commandLink>
+                                        </center>
+                                    </c:forEach>
+
+
+                                    <!-- Listado de Ejemplos Agregados -->
+                                    <h:commandButton styleClass="btn btn-success btn-md" style="margin-top:10px; " value="Agregar Ejemplo" onclick="panelCollapse(2)"  >
+                                        <p:ajax  listener="#{ejemploBean.updatePanelExample()}" update="form:fragmentExample" oncomplete="tooltip()"/>
+                                    </h:commandButton>
+                                    <br/>
+
+
+                                    <!-- Panel Ejemplo -->
+
+                                    <p:panel id="panelShowEjemplo" rendered="#{ejemploBean.showPanelExample}">
+                                        <h:outputLabel value="Ejemplo de Uso:" for="ejUso" >
+                                            <a  data-toggle="tooltip" title="Muestre un ejemplo (en código preferiblemente) de la forma correcta en que debe usarse el método!"><span class="glyphicon glyphicon-question-sign icon-small"></span></a>
+                                        </h:outputLabel>
+                                        <h:inputTextarea styleClass="form-control area-text boxsizingBorder" rows="4" cols="30" id="ejUso" value="#{ejemploBean.ejemplo.ejUso}" title="EjUso" />
+                                        <br/>
+
+                                        <p:commandLink styleClass="btn btn-success" style="color: white" value="Guardar" oncomplete="tooltip()"  >
+                                            <p:ajax process="@this,panelShowEjemplo" listener="#{ejemploBean.addExample}" update="form:fragmentExample :form:msgsEdicion"/>
+                                        </p:commandLink>
+                                        <br/>
+
+                                    </p:panel>
+
+
+                                </p:outputPanel>
+                                <!-- Panel Ejemplo -->
+                                <p:separator/>
+                                <center>
+
+                                    <h:commandLink rendered="#{!metodoBean.estaEditandoMetodo()}" styleClass="btn btn-success btn-md" style="color:white; font-family: Arial,sans-serif; font-size: 1em;"  value="Agregar Método" >
+                                        <p:ajax process="@this,panelMethod" listener="#{metodoBean.addMethod(parametroBean, ejemploBean)}" update="form:padding :form:msgsEdicion" oncomplete="tooltip()"/>
+                                    </h:commandLink>
+
+                                    <p:outputPanel id="outputBotonesMetodo" rendered="#{metodoBean.estaEditandoMetodo()}">
+
+                                        <h:commandLink id="cmdSaveChanges" styleClass="btn btn-success btn-md" style="color:white; font-family: Arial,sans-serif; font-size: 1em;"  value="Guardar Cambios" >
+                                            <p:ajax process="@this,panelMethod" listener="#{metodoBean.guardarCambiosMetodo(parametroBean, ejemploBean)}" update="form:padding :form:msgsEdicion" oncomplete="PF('toolTipFade').hide()"/>
+                                        </h:commandLink>
+                                        <p:tooltip id="toolTipFade" widgetVar="toolTipFade" for="cmdSaveChanges"  value="Pulsa para guardar los cambios realizados al método #{metodoBean.metodo.cabecera}" position="top"/>
+
+                                        &nbsp;
+
+                                        <h:commandLink styleClass="btn btn-success btn-md" style="color:white; font-family: Arial,sans-serif; font-size: 1em;"  value="Cancelar" >
+                                            <p:ajax process="@this,panelMethod" listener="#{metodoBean.cancelEditMethod(parametroBean, ejemploBean, true)}" update="form:padding :form:msgsEdicion" oncomplete="tooltip()"/>
+                                        </h:commandLink>
+
+
+                                    </p:outputPanel>
+
+
+                                    <br/>
+                                    <br/>
+                                    <!-- Listado de Metodos Agregados -->
+                                    <p:outputPanel id="outputMethod">
+                                        <c:forEach var="metodo" items="#{metodoBean.metodos}" varStatus="status">
+                                            <center>
+                                                <p:commandLink styleClass="btn btn-default" update="form:methodDetails" style="width: 100%"  value="Ver Detalles Método #{status.index+1}" oncomplete="$('#methodDialog').modal('show')">
+
+                                                    <p:ajax process="@this" update="form:methodDetails" listener="#{metodoBean.setSelectedMetodo(metodo)}" oncomplete="tooltip()"/>
+                                                </p:commandLink>
+                                            </center>
+                                        </c:forEach>
+                                    </p:outputPanel>
+                                    <!-- Listado de Metodos Agregados -->
+                                </center>
+                                <br/>
+                                <div>
+                                    <h:commandLink styleClass="btn btn-danger content-text "  >
+                                        <span class="glyphicon glyphicon-arrow-left icon-white"></span>
+                                        <p:ajax process="@this,panelMethod" listener="#{componentBean.setPanelActivo(1)}" oncomplete="tooltip()" onsuccess="loadFile(event,null)" />
+                                    </h:commandLink>
+                                    <h:commandLink styleClass="btn btn-danger content-text pull-right">
+                                        <span class="glyphicon glyphicon-arrow-right icon-white"></span>
+                                        <p:ajax process="@this,panelMethod" listener="#{componentBean.showThirdPanel( metodoBean )}" update=":form:msgsEdicion" oncomplete="tooltip()"/>
+                                    </h:commandLink>
+                                    <br/><br/>  
+                                </div>
+                            </p:panel>
+                            <!-- panel 2 -->
+
+                            <!-- panel 3 -->
+
+
+                            <p:panel  id="panelUpload" rendered="#{componentBean.isActivePanel(3)}">
+                                #{recursoBean.setComponente(componentBean.componente)}
+                                <h3 style="text-align: center">Archivos del Componente</h3>
+
+
+                                <div class="panel panel-success">  
+                                    <div class="panel-heading">Archivo principal</div>
+                                    <div class="panel-body">
+                                        <center>
+
+                                            <p:outputPanel id="outputFileUploadMain">
+
+
+                                                <p:fileUpload id="fileUplodArchivoMain" value="#{recursoBean.archivoMain}" fileUploadListener="#{recursoBean.handleArchivoMainUpload}" mode="advanced"
+                                                              auto="true" sizeLimit="10485760" invalidSizeMessage="El tamaño del archivo excede el permitido de 10 MB!"  label="Seleccionar Archivo" update="form:outputpanelSubirComponente form:outputFileUploadMain" />
+
+                                                <p:outputPanel rendered="#{recursoBean.hayArchivoMain}">
+
+
+                                                    <div class="table-responsive">
+                                                        <table class="table" border="0">
+                                                            <tr>
+                                                                <tr>
+                                                                    <th>Archivo</th>
+                                                                    <th class="text-center td-space">Acción</th>
+                                                                </tr>
+                                                                <td><p:outputLabel value="#{recursoBean.archivoMain.fileName}" />  </td>
+                                                                <td class="text-center">
+
+                                                                    <h:commandLink  class="link-style-close" style="color:red">X
+                                                                        <p:ajax listener="#{recursoBean.eliminarArchivoMain()}" update="form:outputpanelSubirComponente form:outputFileUploadMain" /> 
+                                                                    </h:commandLink>
+
+
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                </p:outputPanel> 
+                                            </p:outputPanel>
+
+                                        </center>
+                                    </div>
+                                </div>
+
+
+                                <div class="panel panel-success">  
+                                    <div class="panel-heading">Imágenes del componente</div>
+                                    <div class="panel-body">
+                                        <center>
+                                            <p:fileUpload id="gallery-photo-add" fileUploadListener="#{recursoBean.handleImageUpload}" mode="advanced"
+                                                          auto="true" fileLimit="5242880" fileLimitMessage="El tamaño de la imagen excede el permitido de 5 MB"  allowTypes="/(\.|\/)(jpe?g|png)$/" label="Seleccionar Imagen" invalidFileMessage="El archivo que seleccionaste no corresponde a una imagen!" a:onchange="saveImages(this)"/>
+                                            <p:outputPanel id="panelImagesUploaded" >
+                                                <p:outputPanel rendered="#{recursoBean.imagesComponente.size()>0}">
+                                                    <div class="table-responsive">
+                                                        <table class="table">
+                                                            <p:outputPanel rendered="#{recursoBean.imagesComponente.size()>0}">
+                                                                <tr>
+                                                                    <th class="text-center">Imagen</th>
+                                                                    <th class="text-center">Nombre</th>
+                                                                    <th class="text-center td-space">Acción</th>
+                                                                </tr>
+                                                            </p:outputPanel>
+                                                            <ui:repeat value="#{recursoBean.imagesComponente}" var="imagenU" varStatus="index" >
+                                                                <tr>
+
+                                                                    <td style="width: 200px" >
+                                                                        <img id="imagen#{index.index}" class="img-responsive" style="min-width: 200px;"/>
+                                                                        #{recursoBean.cargarImagenSeleccionada(index.index)}
+                                                                    </td>
+
+
+                                                                    <td class="text-center">
+                                                                        <h:outputText value="#{imagenU.fileName}" />
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        <h:commandLink value="X" class="link-style-close" style="color:red">
+                                                                            <p:ajax listener="#{recursoBean.removeImagen(imagenU, index.index)}" update="form:panelImagesUploaded" />
+                                                                        </h:commandLink>
+                                                                    </td>
+                                                                </tr>
+                                                            </ui:repeat>
+
+                                                        </table>
+                                                    </div>
+                                                </p:outputPanel>
+                                            </p:outputPanel>
+
+                                        </center>
+                                    </div>
+                                </div>
+
+
+                                <div class="panel panel-success">  
+                                    <div class="panel-heading">Archivos adicionales</div>
+                                    <div class="panel-body">
+                                        <center>
+
+                                            <p:fileUpload fileUploadListener="#{recursoBean.handleFileUpload}" mode="advanced" auto="true" invalidSizeMessage="El tamaño del archivo excede el permitido de 10 MB" label="Seleccionar Archivo"
+                                                          sizeLimit="10485760" update=":form:msgsEdicion" />
+
+                                            <p:outputPanel id="filesUploaded">
+                                                <p:outputPanel rendered="#{recursoBean.archivosAdicionales.size()>0}">
+                                                    <div class="table-responsive">
+                                                        <table class="table">
+                                                            <p:outputPanel rendered="#{recursoBean.archivosAdicionales.size()>0}">
+                                                                <tr>
+                                                                    <th>Nombre</th>
+                                                                    <th class="text-center td-space">Acción</th>
+                                                                </tr>
+                                                            </p:outputPanel>
+                                                            <ui:repeat var="fileU" value="#{recursoBean.archivosAdicionales}">
+                                                                <tr>
+                                                                    <td class="text-justify">
+                                                                        <h:outputText value="#{fileU.fileName}" />
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        <h:commandLink value="X" class="link-style-close" style="color:red">
+                                                                            <p:ajax listener="#{recursoBean.removeArchivo(fileU)}" update="form:filesUploaded" />
+                                                                        </h:commandLink>
+                                                                    </td>
+                                                                </tr>
+                                                            </ui:repeat>
+                                                        </table>
+                                                    </div>
+                                                </p:outputPanel>
+                                            </p:outputPanel>
+
+                                        </center>
+                                    </div>
+                                </div>
+
+                                <div> 
+                                    <a  data-toggle="tooltip" title="Indica algún comentario adicional que deseas añadir!" style="text-decoration: none">
+                                        <h:outputLabel for="observaciones" value="Observaciones"/>
+                                        <span class="glyphicon glyphicon-question-sign icon-small"></span>
+                                    </a>
+                                    <br/>
+                                    <h:inputTextarea styleClass="form-control area-text" id="observaciones" value="#{peticionSubidaBean.peticion.observaciones}"  />
+                                </div>
+                                <br/>
+                                <br/>
+                                <div>
+                                    
+
+                                    <p:outputPanel id="outputpanelSubirComponente">
+                                        <h:commandLink styleClass="btn btn-danger content-text " >
+                                         <span class="glyphicon glyphicon-arrow-left icon-white"></span>
+                                         <p:ajax process="@this,panelUpload" listener="#{componentBean.setPanelActivo(2)}" oncomplete="tooltip()" />
+                                        </h:commandLink>
+
+                                        <h:commandLink onclick="PF('bui').show()" rendered="#{recursoBean.hayArchivoMain}" styleClass="btn btn-danger pull-right" actionListener="#{componentBean.guardarComponente(metodoBean, tagBean, categoriaBean, recursoBean, peticionSubidaBean, dependenciaBean)}"  >
+                                            <label class="icon-white">Registrar Componente</label>
+                                        </h:commandLink>
+
+                                        <h:commandLink rendered="#{!recursoBean.hayArchivoMain}" styleClass="btn btn-danger pull-right"  >
+                                            <label class="icon-white">Registrar Componente</label>
+                                            <p:ajax listener="#{componentBean.guardarComponente(metodoBean, tagBean, categoriaBean, recursoBean, peticionSubidaBean,dependenciaBean)}" update=":form:msgsEdicion"/>
+                                        </h:commandLink>
+
+                                    </p:outputPanel>
+
+                                    <br/>
+                                    <br/>  
+                                </div>
+                            </p:panel>
+
+                            <p:panel id="panelInfo" rendered="#{componentBean.isActivePanel(4)}">
+                                <p:outputLabel value="" />
+                                <div class="alert alert-success fade in">
+                                    <strong>Información!</strong><br/>
+                                    Se ha enviado una solicitud de subida de tu componente;
+                                    esta, será revisada por un administrador que te informará sobre su estado.
+                                </div>
+                                
+                                <h:commandLink  class="btn btn-danger" style="color:white; height: " value="Aceptar" action="#{componentBean.abrirUploadComponent()}" />
+                                   
+                                
+
+                            </p:panel>
+
+
+                        </h:panelGroup>
+
+
+                        <!-- Modal categorias -->
+                        <div id="myModal" class="modal fade" role="dialog">
+                            <div class="modal-dialog modal-lg ">
+
+                                <!-- Modal content-->
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                        <h4 class="modal-title">Categorías</h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <h:panelGrid columns="8" style="width: 100%" cellpadding="10" cellspacing="10">
+                                            <c:forEach var="categoria" items="#{categoriaBean.categorias}" varStatus="loop">
+                                                <h:column >
+                                                    <p:selectBooleanCheckbox  >
+                                                        <p:ajax listener="#{categoriaBean.checkCategoria( categoria  )}" />
+
+                                                    </p:selectBooleanCheckbox>
+                                                </h:column>
+                                                <h:column >
+                                                    <h:outputText value="#{categoria.nombre}" />
+                                                </h:column>
+                                            </c:forEach>
+                                        </h:panelGrid>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-danger" data-dismiss="modal" >Cerrar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Modal categorias -->
+
+                        <!-- Dialog Ejemplo -->
+                        <div id="exampleDialog" class="modal fade" role="dialog">
+                            <div class="modal-dialog modal-lg">
+
+                                <!-- Modal content-->
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                        <h4 class="modal-title">Detalles del Ejemplo</h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p:outputPanel id="exampleDetail">
+
+
+                                            <pre class="prettyprint" id="my-code-element" >#{ejemploBean.selectedExample.ejUso}</pre>
+
+                                        </p:outputPanel>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <h:commandButton  class="btn btn-default" value="Eliminar" onclick="$('#exampleDialog').modal('hide')" >
+                                            <p:ajax update="form:fragmentExample :form:msgsEdicion" listener="#{ejemploBean.removeEjemplo}"/>
+                                        </h:commandButton>
+
+                                        &nbsp;
+                                        <h:commandButton  class="btn btn-default" value="Editar" onclick="$('#exampleDialog').modal('hide')" >
+                                            <p:ajax update="form:fragmentExample :form:msgsEdicion" listener="#{ejemploBean.editarEjemplo()}" oncomplete="tooltip()"/>
+                                        </h:commandButton>
+                                        &nbsp;
+                                        <input type="button" class="btn btn-danger" value="Cerrar" onclick="$('#exampleDialog').modal('hide')" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dialog Ejemplo -->
+                        <!-- Dialog Metodo  -->
+                        <div id="methodDialog" class="modal fade" role="dialog">
+                            <div class="modal-dialog modal-lg">
+                                <!-- Modal content-->
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                        <h4 class="modal-title">Detalles del Método</h4>
+                                    </div>
+                                    <div class="modal-body">
+
+                                        <p:outputPanel id="methodDetails">
+
+                                            <div class="panel panel-warning">   
+                                                <div class="panel-heading">Cabecera del método</div>
+                                                <div class="panel-body" style="overflow-x: auto">
+                                                    #{metodoBean.selectedMetodo.cabecera}
+                                                </div>
+                                            </div>
+                                            <div class="panel panel-warning">
+                                                <div class="panel-heading">Descripción</div>
+                                                <div class="panel-body" style="overflow-x: auto">
+                                                    #{metodoBean.selectedMetodo.descripcion}
+                                                </div>
+                                            </div>
+                                            <div class="panel panel-warning">
+                                                <div class="panel-heading">Valor de retorno</div>
+                                                <div class="panel-body" style="overflow-x: auto">
+                                                    <code>#{metodoBean.selectedMetodo.valorRetorno}</code>
+                                                </div>
+                                            </div>
+                                            <div class="table-responsive">
+                                                <p:outputLabel value="Parámetros" />
+                                                <c:if test="#{metodoBean.selectedMetodo.parametroList.size() == 0}">
+                                                    <div class="alert alert-success fade in">
+
+                                                        <strong>Atencion!</strong> No se agregó ningun parámetro.
+                                                    </div>
+                                                </c:if>
+                                                <c:if test="#{metodoBean.selectedMetodo.parametroList.size() > 0}">
+                                                    <center>
+                                                        <h:dataTable value="#{metodoBean.selectedMetodo.parametroList}" var="item"  class="table">
+                                                            <h:column >
+                                                                <f:facet name="header">
+                                                                    <center><h:outputText value="Parámetro"/></center>
+                                                                </f:facet>
+                                                                <h:outputText   value="#{item.parametro}"/>
+                                                            </h:column>
+                                                            <h:column>
+                                                                <f:facet name="header">
+                                                                    <center><h:outputText value="Tipo"/></center>
+                                                                </f:facet>
+                                                                <h:outputText value="#{item.tipo}"/>
+                                                            </h:column>
+                                                            <h:column>
+                                                                <f:facet name="header">
+                                                                    <center><h:outputText value="Detalle"/></center>
+                                                                </f:facet>
+                                                                <h:outputText value="#{item.detalle}"/>
+                                                            </h:column>
+                                                            <h:column class="text-center">
+                                                                <center>
+                                                                    <f:facet name="header">
+                                                                        <center><h:outputText value="Opcional"/></center>
+                                                                    </f:facet>
+                                                                    <h:outputText class="text-center" value="#{item.valorOpcional == 1? 'Si': 'No'}"/>
+                                                                </center>
+                                                            </h:column>
+
+                                                        </h:dataTable>
+                                                    </center>
+                                                </c:if>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <p:outputLabel value="Ejemplos" />
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <ui:repeat var="ejemplo" value="#{metodoBean.selectedMetodo.ejemploList}" varStatus="loop">
+                                                        <input type="button" class="btn btn-default" 
+                                                               onclick="$('#my-code-element#{loop.index+1}').prettify();" 
+                                                               style="width: 100%;margin: 0 auto;" data-toggle="collapse" 
+                                                               data-target="#ejemplo#{loop.index+1}" 
+                                                               value="Ver ejemplo #{loop.index+1}" />
+                                                        <div id="ejemplo#{loop.index+1}" class="collapse" style="margin:0 auto">
+                                                            <pre class="prettyprint" id="my-code-element#{loop.index+1}">#{ejemplo.ejUso}</pre>
+                                                        </div>
+                                                    </ui:repeat>
+                                                </div>
+                                            </div>
+
+
+                                        </p:outputPanel>
+
+                                           
+
+
+
+
+                                    </div>
+                                    <div class="modal-footer">
+                                        <h:commandButton  class="btn btn-default" value="Eliminar" onclick="$('#methodDialog').modal('hide')" >
+                                            <p:ajax update=":form:msgsEdicion"  listener="#{metodoBean.removeMethod(parametroBean,ejemploBean )}"/>
+                                        </h:commandButton>
+
+                                        &nbsp;
+                                        <h:commandButton  class="btn btn-default" value="Editar" onclick="$('#methodDialog').modal('hide')" >
+                                            <p:ajax update="form:padding :form:msgsEdicion" listener="#{metodoBean.editMethod(ejemploBean, parametroBean)}" oncomplete="tooltip()"/>
+                                        </h:commandButton>
+
+                                        &nbsp;
+                                        <input type="button"  class="btn btn-danger" value="Cerrar" onclick="$('#methodDialog').modal('hide')" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Dialog Metodo  -->
+                        
+                        
+                    </h:form>
+
+                    <p:blockUI block="form" widgetVar="bui">
+                            Cargando
+                            <p:graphicImage value="../../resources/images/ajaxloadingbar.gif"/>
+                    </p:blockUI>
+
+
+                </div>
+            </ui:define>
+        </ui:composition>
+    </body>
+</html>

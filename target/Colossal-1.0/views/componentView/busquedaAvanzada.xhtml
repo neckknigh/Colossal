@@ -1,0 +1,253 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:a="http://xmlns.jcp.org/jsf/passthrough">
+
+    <body onload="toggle()">
+
+        <ui:composition template="./../templates/colossalBaseTemplate.xhtml">
+
+            <ui:define name="titulo_template">
+                COlOsSAL UFPS
+            </ui:define>
+
+            <ui:define name="header_menu_template">
+                <h:form>
+                    #{notificacionBean.inicializarBean()}
+                    <p:commandLink id="cerrar_sesion" actionListener="#{logBean.cerrarSesion(componentBean)}" styleClass="link-ajuste header_menu " style="float: right">
+                        <p><span class="glyphicon glyphicon-log-out  icon-ajuste"></span></p> 
+                    </p:commandLink>
+                    <p:tooltip id="tooTipCerrarSession" for="cerrar_sesion" value="Cerrar Sesión" position="left"/>
+                    <p:commandLink action="#{componentBean.openAdminPanel()}" rendered="#{usuarioBean.esAdministrador()}" styleClass="link-ajuste header_menu " style="float: right" id="panel_admin" ><p><span class="glyphicon glyphicon-pencil  icon-ajuste"></span></p></p:commandLink>
+                    <p:tooltip id="toolTipadmin" for="panel_admin" value="Panel de Administración" position="left"/>
+                    <p:commandLink action="#{busquedaBean.openUserPanel(5,0,1,1,1)}" id="panel_perfil" styleClass="link-ajuste header_menu" style="float: right"><p><span class="glyphicon glyphicon-user icon-ajuste"></span></p></p:commandLink>
+                    <p:tooltip id="toolTipperfil" for="panel_perfil" value="Mi Perfil" position="left"/>
+                    <p:commandLink action="#{componentBean.abrirUploadComponent()}"  id="panel_subir" styleClass="link-ajuste header_menu" style="float: right"><p><span class="glyphicon glyphicon-open  icon-ajuste"></span></p></p:commandLink>                  
+                    <p:tooltip id="toolTipsubir" for="panel_subir" value="Subir Componentes"  position="left"/>
+                    <div class="dropdown" style="float: right;">
+                        <a style="cursor: pointer;text-decoration: none" class="link-ajuste header_menu dropdown-toggle" data-toggle="dropdown">
+                            <span class="glyphicon glyphicon-bell icon-ajuste"/>
+                            <span class="badge">#{notificacionBean.cantidadNotificaciones}</span>
+                        </a>
+                        <ul class="dropdown-menu " >
+                            <table class="table">
+                                <ui:repeat value="#{notificacionBean.lNotificaciones}"  var="notificacion">
+                                    <tr>
+                                        <td class=" hover-table">
+                                            <p:commandLink action="#{notificacionBean.verNotificacion(notificacion)}">
+                                                <strong>#{administradorBean.prepararFechaYHora(notificacion.estadoIdestado.fechaGeneracion)}</strong><br/>
+                                                #{notificacionBean.limitarTexto(notificacion)}
+                                            </p:commandLink>
+                                        </td>
+                                    </tr>
+                                </ui:repeat>
+                            </table>
+                            <p:outputPanel rendered="#{notificacionBean.cantidadNotificaciones==0}">
+                                <table class="table">
+                                    <tr>
+                                        <td class="text-center">No hay notificaciones nuevas.</td>
+                                    </tr>
+                                </table>
+                            </p:outputPanel>
+                            <hr class="margin-reduction"/>
+                            <center>
+                                <p:commandLink  styleClass="margin-reduction" action="#{notificacionBean.verNotificaciones(1,1)}" value="Ver todas"/>
+                            </center>
+                        </ul>
+                    </div>
+                </h:form>
+            </ui:define>
+
+            <ui:define name="menu_sidebar_template">
+                <h:form>
+                    <li class="sidebar-brand">
+                        <p:commandLink action="#{componentBean.abrirInicio()}" style="margin: 0 auto"><span class="glyphicon glyphicon-home"></span>&nbsp;&nbsp;Menú de Inicio</p:commandLink>
+                    </li>
+                    <h:inputText onkeypress="desactivarEnter()" a:placeholder="Buscar Categorías" styleClass="form-control" style="width: 80%;margin: 0 auto;font-size: 13px" value="#{categoriaBean.categoria}">
+                        <p:ajax event="keyup" update="categoriaList" listener="#{categoriaBean.findCategoriesByName()}" />
+                    </h:inputText>
+                    <br/>
+                    <p:outputPanel id="categoriaList">
+                        <c:forEach var="categoria" items="#{categoriaBean.categorias}">
+                            <li>
+                                <p:commandLink action="#{busquedaBean.buscar(1,1,1,0)}">#{categoria.nombre}
+                                    <f:setPropertyActionListener value="#{categoria.idcategoria}"  target="#{busquedaBean.id_cat}" />
+                                </p:commandLink>
+                            </li>
+                        </c:forEach>
+                    </p:outputPanel>
+                </h:form>
+            </ui:define>
+
+            <ui:define name="contenido_template">
+                <h:form id="formBusquedaAvanzada">
+                    <p:growl id="message"/>
+                    <p:outputPanel rendered="#{busquedaAvanzadaBean.render==1}">
+                        <h3 class="text-center">Búsqueda Avanzada</h3>
+                        <div class="panel panel-success">
+                            <div class="panel-body">
+                                <p>Claves para la búsqueda avanzada:</p>
+                                <ul>
+                                    <li type="circle">Si desea colocar más de un valor de búsqueda separe los datos con el identificador <strong><code>;</code></strong></li>
+                                    <li type="circle">Debe llenar al menos uno de los campos para iniciar la búsqueda.</li>
+                                    <li type="circle">Los campos vacíos no serán tomados en cuenta para la búsqueda. Por ejemplo si solo el campo 2 (el concerniente a los tags) tiene datos y los otros dos no, solo se hará la búsqueda por tags.</li>
+                                    <li type="circle">Los identificadores (los campos de selección de operadores lógicos) corresponden a cada campo que anteceden, si estos están vacíos entonces son ignorados en la búsqueda. Por ejemplo: si el campo de los tags esta vacío, se ignora el valor que se encuentra en el primer identificador.</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="panel panel-success">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">
+                                    <a data-toggle="collapse" data-parent="#accordion" href="#collapse1">
+                                        Búsqueda por nombre,descripción, servicio y tecnologías</a>
+                                </h4>
+                            </div>
+                            <div id="collapse1" class="panel-collapse collapse in">
+                                <div class="panel-body">
+                                    <h:inputText id="cadenaTexto" class="form-control" value="#{busquedaAvanzadaBean.cadenaTextos}"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h:selectOneMenu id="ident1" style="width: 12%" class="form-control" value = "#{busquedaAvanzadaBean.identifier1}"> 
+                            <f:selectItem itemValue = "and" itemLabel = "AND" /> 
+                            <f:selectItem itemValue = "or" itemLabel = "OR" /> 
+                            <f:selectItem itemValue = "and not" itemLabel = "AND NOT" /> 
+                        </h:selectOneMenu><br/> 
+
+                        <div class="panel panel-success">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">
+                                    Búsqueda por tags
+                                </h4>
+                            </div>
+                            <div class="panel-body">
+                                <h:inputText id="cadenaTag" class="form-control" value="#{busquedaAvanzadaBean.cadenaTags}"/>
+                            </div>
+                        </div>
+
+                        <h:selectOneMenu id="ident2" style="width: 12%" class="form-control" value = "#{busquedaAvanzadaBean.identifier2}"> 
+                            <f:selectItem itemValue = "and" itemLabel = "AND" /> 
+                            <f:selectItem itemValue = "or" itemLabel = "OR" /> 
+                            <f:selectItem itemValue = "and not" itemLabel = "AND NOT" /> 
+                        </h:selectOneMenu><br/>
+
+                        <div class="panel panel-success">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">
+                                    Búsqueda por Servicios
+                                </h4>
+                            </div>
+                            <div class="panel-body">
+                                <h:inputText id="cadenaServicio" class="form-control" value="#{busquedaAvanzadaBean.cadenaServicios}"/>
+                            </div>
+                        </div>
+                        #{busquedaAvanzadaBean.iniciarDatepickers()}
+                        <div class="panel panel-success">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">
+                                    Rango de fechas
+                                </h4>
+                            </div>
+                            <div class="panel-body">
+                                <div class="col-md-6">
+                                    <h:inputText id="fecha1" class="form-control datepicker1" value="#{busquedaAvanzadaBean.fecha1}" onclick="inicializarDatepickers()" >
+                                        <p:ajax event="change" update="fecha1" listener="#{busquedaAvanzadaBean.evaluarCadenaFechas(1)}" oncomplete="inicializarDatepickers()" />
+                                    </h:inputText>
+                                </div>
+                                <div class="col-md-6">
+                                    <h:inputText id="fecha2" class="form-control datepicker2" value="#{busquedaAvanzadaBean.fecha2}" onclick="inicializarDatepickers()">
+                                        <p:ajax event="change" update="fecha2" listener="#{busquedaAvanzadaBean.evaluarCadenaFechas(2)}" oncomplete="inicializarDatepickers()" />
+                                    </h:inputText>
+                                </div>
+                            </div>
+                        </div>
+                        <center>
+                            <p:commandLink styleClass="btn btn-success" value="Buscar" action="#{busquedaAvanzadaBean.buscar(1,1)}" />
+                                
+                            
+                        </center>
+                    </p:outputPanel>
+
+                    <p:outputPanel rendered="#{busquedaAvanzadaBean.render==2}">
+
+
+
+                        <div class="alert alert-success">
+                            <strong>Criterios de búsqueda:</strong>
+                            <p:outputPanel rendered="#{busquedaAvanzadaBean.getListString(busquedaAvanzadaBean.cadenaTextos)>0}">
+                                <strong>Búsqueda por nombre,descripción,servicio y tecnologías:</strong>#{busquedaAvanzadaBean.getLabelCriterioBusqueda(busquedaAvanzadaBean.cadenaTextos)} 
+                            </p:outputPanel>
+
+                            <p:outputPanel rendered="#{busquedaAvanzadaBean.getListString(busquedaAvanzadaBean.cadenaTags)>0}">
+                                <p:outputPanel rendered="#{busquedaAvanzadaBean.getListString(busquedaAvanzadaBean.cadenaTextos)>0}">
+                                    <strong>#{busquedaAvanzadaBean.identifier1}</strong>
+                                </p:outputPanel>
+                                <strong>Búsqueda por tags:</strong>#{busquedaAvanzadaBean.getLabelCriterioBusqueda(busquedaAvanzadaBean.cadenaTags)} 
+                            </p:outputPanel>
+                            <p:outputPanel rendered="#{busquedaAvanzadaBean.getListString(busquedaAvanzadaBean.cadenaServicios)>0}">
+                                <p:outputPanel rendered="#{busquedaAvanzadaBean.getListString(busquedaAvanzadaBean.cadenaTextos)>0 or busquedaAvanzadaBean.getListString(busquedaAvanzadaBean.cadenaTags)>0}">
+                                    <strong>#{busquedaAvanzadaBean.identifier2}</strong>
+                                </p:outputPanel>
+                                <strong>Búsqueda por servicios:</strong>#{busquedaAvanzadaBean.getLabelCriterioBusqueda(busquedaAvanzadaBean.cadenaServicios)} 
+                            </p:outputPanel>
+                            <p><strong>Rango de fechas: </strong>fecha 1: #{busquedaAvanzadaBean.fecha1}  --  fecha 2: #{busquedaAvanzadaBean.fecha2}</p>
+                        </div>
+                        <p:dataTable var="componente" value="#{busquedaAvanzadaBean.componentesBusqueda}" 
+                                     styleClass="tabla-primefaces"
+                                     rows="5"
+                                     widgetVar="componentTable"
+                                     paginatorPosition="bottom"
+                                     emptyMessage="No hay resultados que coincidan con su búsqueda">
+                            <p:column  filterBy="#{componente.nombre}#{componente.descripcion}" filterStyle="display:none">
+                                <div class="row">
+                                    <div class="col-md-3 text-center">
+                                        <p:commandLink style="color: red" action="#{busquedaBean.verComponente(componente.idComponente)}">
+                                            <img class="img-rounded img-responsive" src="#{recursoBean.getUrlLogo(componente)}" alt="Lights" style="margin: 0 auto;max-width: 200px"/>
+                                        </p:commandLink>
+                                    </div>
+                                    <div class="col-md-9">
+                                        <p:commandLink style="color: red" value="#{componente.nombre}" action="#{busquedaBean.verComponente(componente.idComponente)}">
+                                        </p:commandLink><br/>
+                                        <h:outputText value="#{busquedaBean.limitarTexto(componente.descripcion)}"/><br/><br/>
+                                        <h:outputText value="Tags: "/>
+                                        <ui:repeat value="#{componente.componenteHasTagList}" var="tag" >
+                                            <p:commandLink  action="#{busquedaBean.componentesPorTag(tag.tag.idtag,1,1,0)}" styleClass="btn btn-default btn-tag" value="#{tag.tag.nombre}"  />
+                                        </ui:repeat>
+                                        <br/>
+                                    </div>
+                                </div>
+                            </p:column>
+                        </p:dataTable>
+                        <center>
+                            <p:outputPanel rendered="#{busquedaAvanzadaBean.calcularPaginasTotales()>1}">
+                                <ul class="pagination">
+                                    <li><p:commandLink action="#{busquedaAvanzadaBean.busqueda(1,-1)}"><span class="glyphicon glyphicon-menu-left"></span><span class="glyphicon glyphicon-menu-left"></span></p:commandLink></li>
+                                    <li><p:commandLink action="#{busquedaAvanzadaBean.busqueda(2,-1)}"><span class="glyphicon glyphicon-menu-left"></span></p:commandLink></li>
+                                    <c:forEach var="numero" items="#{busquedaAvanzadaBean.calcularPaginas()}">
+                                        <c:if test="#{busquedaAvanzadaBean.pagina == numero}">
+                                            <li class="active"><p:commandLink >#{numero}</p:commandLink></li>  
+                                        </c:if>
+                                        <c:if test="#{busquedaAvanzadaBean.pagina != numero}">
+                                            <li><p:commandLink action="#{busquedaAvanzadaBean.busqueda(-1,numero)}">#{numero}</p:commandLink></li>  
+                                        </c:if>
+                                    </c:forEach>
+                                    <li><p:commandLink action="#{busquedaAvanzadaBean.busqueda(3,-1)}"><span class="glyphicon glyphicon-menu-right"></span></p:commandLink></li>
+                                    <li><p:commandLink action="#{busquedaAvanzadaBean.busqueda(4,-1)}"><span class="glyphicon glyphicon-menu-right"></span><span class="glyphicon glyphicon-menu-right"></span></p:commandLink></li>
+                                </ul>
+                            </p:outputPanel>
+                        </center> 
+
+                    </p:outputPanel>
+                </h:form>
+            </ui:define>
+
+        </ui:composition>
+
+    </body>
+</html>
