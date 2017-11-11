@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuite tests="6" failures="0" name="co.edu.ufps.colossal.dao.CategoriaDAOTest" time="0.618" errors="0" skipped="0">
+<testsuite tests="6" failures="0" name="co.edu.ufps.colossal.dao.CategoriaDAOTest" time="0.373" errors="0" skipped="0">
   <properties>
     <property name="java.runtime.name" value="Java(TM) SE Runtime Environment"/>
     <property name="sun.boot.library.path" value="C:\Program Files\Java\jdk1.8.0_131\jre\bin"/>
@@ -15,9 +15,8 @@
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="sun.os.patch.level" value=""/>
     <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
-    <property name="user.dir" value="C:\Users\neck\Desktop\COLOsSAL\ANEXOS1150851-1150818\ARCHIVOS FUENTE\Colossal"/>
+    <property name="user.dir" value="D:\Universidad\Tesis\COLOsSAL\ANEXOS1150851-1150818\ARCHIVOS FUENTE\Colossal"/>
     <property name="java.runtime.version" value="1.8.0_131-b11"/>
-    <property name="netbeans.deploy" value="true"/>
     <property name="java.awt.graphicsenv" value="sun.awt.Win32GraphicsEnvironment"/>
     <property name="java.endorsed.dirs" value="C:\Program Files\Java\jdk1.8.0_131\jre\lib\endorsed"/>
     <property name="os.arch" value="amd64"/>
@@ -30,7 +29,7 @@
     <property name="maven.ext.class.path" value="C:\Program Files\NetBeans 8.2\java\maven-nblib\netbeans-eventspy.jar"/>
     <property name="classworlds.conf" value="C:\Program Files\NetBeans 8.2\java\maven\bin\m2.conf"/>
     <property name="sun.jnu.encoding" value="Cp1252"/>
-    <property name="java.library.path" value="C:\Program Files\Java\jdk1.8.0_131\bin;C:\Windows\Sun\Java\bin;C:\Windows\system32;C:\Windows;C:\ProgramData\Oracle\Java\javapath;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\xampp\php;C:\ProgramData\ComposerSetup\bin;C:\Users\neck\AppData\Local\Microsoft\WindowsApps;C:\Users\neck\AppData\Roaming\Composer\vendor\bin;C:\Program Files\Java\jdk1.8.0_131;C:\apache-maven-3.5.0\bin;;."/>
+    <property name="java.library.path" value="C:\Program Files\Java\jdk1.8.0_131\bin;C:\WINDOWS\Sun\Java\bin;C:\WINDOWS\system32;C:\WINDOWS;C:\ProgramData\Oracle\Java\javapath;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\xampp\php;C:\ProgramData\ComposerSetup\bin;C:\Program Files\nodejs\;C:\Program Files\Git\cmd;C:\Users\neck\AppData\Local\Microsoft\WindowsApps;C:\Users\neck\AppData\Roaming\Composer\vendor\bin;C:\Program Files\Java\jdk1.8.0_131;C:\apache-maven-3.5.0\bin;C:\Users\neck\AppData\Roaming\npm;C:\Program Files\Microsoft VS Code\bin;;."/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
     <property name="java.class.version" value="52.0"/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
@@ -45,13 +44,13 @@
     <property name="java.vm.specification.version" value="1.8"/>
     <property name="sun.arch.data.model" value="64"/>
     <property name="java.home" value="C:\Program Files\Java\jdk1.8.0_131\jre"/>
-    <property name="sun.java.command" value="org.codehaus.plexus.classworlds.launcher.Launcher -Dnetbeans.deploy=true -Dmaven.ext.class.path=C:\Program Files\NetBeans 8.2\java\maven-nblib\netbeans-eventspy.jar -Dfile.encoding=UTF-8 package"/>
+    <property name="sun.java.command" value="org.codehaus.plexus.classworlds.launcher.Launcher -Dmaven.ext.class.path=C:\Program Files\NetBeans 8.2\java\maven-nblib\netbeans-eventspy.jar -Dfile.encoding=UTF-8 clean install"/>
     <property name="java.specification.vendor" value="Oracle Corporation"/>
     <property name="user.language" value="es"/>
     <property name="awt.toolkit" value="sun.awt.windows.WToolkit"/>
     <property name="java.vm.info" value="mixed mode"/>
     <property name="java.version" value="1.8.0_131"/>
-    <property name="java.ext.dirs" value="C:\Program Files\Java\jdk1.8.0_131\jre\lib\ext;C:\Windows\Sun\Java\lib\ext"/>
+    <property name="java.ext.dirs" value="C:\Program Files\Java\jdk1.8.0_131\jre\lib\ext;C:\WINDOWS\Sun\Java\lib\ext"/>
     <property name="sun.boot.class.path" value="C:\Program Files\Java\jdk1.8.0_131\jre\lib\resources.jar;C:\Program Files\Java\jdk1.8.0_131\jre\lib\rt.jar;C:\Program Files\Java\jdk1.8.0_131\jre\lib\sunrsasign.jar;C:\Program Files\Java\jdk1.8.0_131\jre\lib\jsse.jar;C:\Program Files\Java\jdk1.8.0_131\jre\lib\jce.jar;C:\Program Files\Java\jdk1.8.0_131\jre\lib\charsets.jar;C:\Program Files\Java\jdk1.8.0_131\jre\lib\jfr.jar;C:\Program Files\Java\jdk1.8.0_131\jre\classes"/>
     <property name="java.vendor" value="Oracle Corporation"/>
     <property name="maven.home" value="C:\Program Files\NetBeans 8.2\java\maven"/>
@@ -62,10 +61,10 @@
     <property name="sun.desktop" value="windows"/>
     <property name="sun.cpu.isalist" value="amd64"/>
   </properties>
-  <testcase classname="co.edu.ufps.colossal.dao.CategoriaDAOTest" name="testGetReporteCantComponentesXCategorias" time="0.394"/>
+  <testcase classname="co.edu.ufps.colossal.dao.CategoriaDAOTest" name="testGetReporteCantComponentesXCategorias" time="0.284"/>
   <testcase classname="co.edu.ufps.colossal.dao.CategoriaDAOTest" name="testGetCategoriasByNombre" time="0"/>
   <testcase classname="co.edu.ufps.colossal.dao.CategoriaDAOTest" name="testFindAll" time="0"/>
   <testcase classname="co.edu.ufps.colossal.dao.CategoriaDAOTest" name="testEdit" time="0"/>
   <testcase classname="co.edu.ufps.colossal.dao.CategoriaDAOTest" name="testCreate" time="0"/>
-  <testcase classname="co.edu.ufps.colossal.dao.CategoriaDAOTest" name="testRemove" time="0"/>
+  <testcase classname="co.edu.ufps.colossal.dao.CategoriaDAOTest" name="testRemove" time="0.001"/>
 </testsuite>

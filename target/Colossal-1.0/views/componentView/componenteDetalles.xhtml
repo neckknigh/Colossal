@@ -15,7 +15,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.2/jspdf.min.js"></script>
     </h:head>
     <body>
-         
+
         <ui:composition template="./../templates/colossalBaseTemplate.xhtml">
 
             <ui:define name="titulo_template">
@@ -99,15 +99,15 @@
 
             <ui:define name="contenido_template">
 
-               
-                
+
+
                 <h:form id="formDetalles" >
                     <p:outputPanel rendered="#{componentBean.componente==null}">
-                            <div class="alert alert-danger fade in">
-                                <h:commandLink class="close" action="componente" >&times;</h:commandLink>
-                                <strong>No se ha encontrado ningún componente!</strong> El componente no existe o ha sido borrado de la biblioteca.
-                            </div>
-                </p:outputPanel>
+                        <div class="alert alert-danger fade in">
+                            <h:commandLink class="close" action="componente" >&times;</h:commandLink>
+                            <strong>No se ha encontrado ningún componente!</strong> El componente no existe o ha sido borrado de la biblioteca.
+                        </div>
+                    </p:outputPanel>
                     <p:outputPanel rendered="#{componentBean.componente!=null}">
                         <p:growl id="msgsDetalles" widgetVar="msgsDetalles"/>
                         <div class="row">
@@ -188,9 +188,13 @@
 
                                         <div class="panel-heading text-justify">Dependencias:</div>
                                         <div class="panel-body text-justify">
-                                            <c:if test="#{componentBean.componente.componenteHasDependencyList.size()==0}">
+
+
+                                            <p:outputPanel rendered="#{componentBean.componente.componenteHasDependencyList.size()==0}">
                                                 Ninguna
-                                            </c:if>
+                                            </p:outputPanel>
+
+
                                             <ui:repeat value="#{componentBean.componente.componenteHasDependencyList}" var="componente" >
                                                 <p:commandLink rendered="#{componentBean.getEstadoComponente(componente.componenteDependency)}" styleClass="btn btn-default btn-tag" action="#{busquedaBean.verComponente(componente.componenteDependency.idComponente)}" value="#{componente.componenteDependency.nombre}" />
                                                 <p:commandLink rendered="#{not componentBean.getEstadoComponente(componente.componenteDependency)}" styleClass="btn btn-danger btn-tag" action="#{busquedaBean.verComponenteNoValido(componente.componenteDependency)}" value="#{componente.componenteDependency.nombre}" />
@@ -382,8 +386,8 @@
                                                             <h:column >
 
                                                                 <input id="box#{loop.index}"  type="checkbox" onchange="checkear(
-                                                                            [{name: 'index', value: '#{loop.index}'}
-                                                                            ])" >
+                                                                                [{name: 'index', value: '#{loop.index}'}
+                                                                                ])" >
 
                                                                 </input>
                                                                 #{listaBean.verificarBox(loop.index, item, componentBean.componente)}
@@ -449,8 +453,8 @@
                                 </div>
                                 <h:form>
                                     <h:commandLink class="btn btn-danger right-space" value="Eliminar" action="#{componentBean.eliminarComponente()}" />
-                                        
-                                    
+
+
                                     <h:commandButton class="btn btn-default" value="Cancelar" >
                                         <p:ajax oncomplete="$('#modalDelete').modal('hide')"  />
                                     </h:commandButton>
